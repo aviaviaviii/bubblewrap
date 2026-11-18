@@ -27,9 +27,11 @@ const json = (status: number, body: object) =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
 
 // Hashing both sides first makes the comparison constant-time whatever the lengths.
+// Both sides are trimmed: a space or newline pasted into the Vercel setting along
+// with the password otherwise makes every attempt fail with "Wrong password".
 function passwordMatches(given: string, expected: string) {
-  const a = createHash("sha256").update(given).digest();
-  const b = createHash("sha256").update(expected).digest();
+  const a = createHash("sha256").update(given.trim()).digest();
+  const b = createHash("sha256").update(expected.trim()).digest();
   return timingSafeEqual(a, b);
 }
 
