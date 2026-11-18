@@ -89,3 +89,11 @@ To set it up again (a new sheet or a new Google account):
 If you edit the script later, use **Deploy → Manage deployments → Edit → New version** so the URL stays the same.
 
 To send the newsletter, export the `signups` tab as CSV and import it into whichever tool sends the email.
+
+## Contributing
+
+Gift picks and code fixes are both welcome. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Licence
+
+The code is [MIT](LICENSE). Product images in `public/images/` belong to the shops that sell each gift and aren't covered by the licence.
