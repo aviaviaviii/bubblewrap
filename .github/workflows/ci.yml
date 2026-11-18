@@ -1,4 +1,4 @@
-# Every push and pull request runs the full suite. Vercel still deploys on its own;
+# Every push and pull request runs the suite (browser tests skip gift-only pushes, below). Vercel still deploys on its own;
 # this is the gate that says whether what's on main is sound.
 #
 #   types     astro check over pages, API, tests
@@ -6,6 +6,11 @@
 #   build     astro build, then checks over the files that actually ship
 #   e2e       Playwright against that build: desktop Chrome, Android Chrome, iPhone Safari
 #   security  npm audit, secret scan over full history, dependency review on PRs
+#
+# Browser tests are skipped when everything since the last green run on main is gift
+# data (src/data/gifts.json, public/images/). Every /admin save is a commit, so they
+# used to run three browsers per gift edit. Types, unit, build checks and security
+# still run on every commit, so a bad gift entry or image still fails CI.
 #
 # Weekly run on Mondays so a new advisory against a dependency shows up even when
 # nothing was pushed.
@@ -31,6 +36,40 @@ env:
   NODE_VERSION: 24
 
 jobs:
+  changes:
+    name: What changed
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read # to find the last green run
+    outputs:
+      code: ${{ steps.diff.outputs.code }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      # Compares against the last commit CI passed on, not the previous commit: runs get
+      # cancelled when a newer push lands (concurrency below), so a code change followed
+      # by a quick gift save would otherwise never reach the browser tests. Anything
+      # unclear (PRs, scheduled and manual runs, no green run yet) runs everything.
+      - id: diff
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          code=true
+          if [ "${{ github.event_name }}" = push ]; then
+            base=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow ci.yml --branch main \
+              --status success --limit 1 --json headSha --jq '.[0].headSha // empty' || true)
+            if [ -n "$base" ] && git merge-base --is-ancestor "$base" HEAD 2>/dev/null; then
+              other=$(git diff --name-only "$base" HEAD | grep -vE '^(src/data/gifts\.json|public/images/)' || true)
+              [ -z "$other" ] && code=false
+              echo "Compared with last green run at $base"
+              echo "${other:-Only gift data changed, skipping browser tests.}"
+            fi
+          fi
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+
   types:
     name: Types
     runs-on: ubuntu-latest
@@ -79,7 +118,8 @@ jobs:
 
   e2e:
     name: Browser (${{ matrix.project }})
-    needs: build
+    needs: [changes, build]
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
