@@ -1741,13 +1741,13 @@
     "imageAlt": "Gilded Palm Two Tier Cake Stand",
     "price": 5450,
     "tags": [
-      "cook",
-      "live"
+      "live",
+      "cook"
     ],
     "date": "2025-10-18",
     "link": "https://www.nicobar.com/products/gilded-palm-two-tier-cake-stand",
     "description": "",
-    "draft": false
+    "draft": true
   },
   {
     "slug": "classic-chunky-hoops",
