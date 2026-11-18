@@ -1894,13 +1894,13 @@
     "imageAlt": "Reproduced 1923 Bauhaus Chess Pieces",
     "price": 7300,
     "tags": [
-      "play",
-      "live"
+      "live",
+      "play"
     ],
     "date": "2023-08-24",
     "link": "https://royalchessmall.in/products/reproduced-1923-bauhaus-chess-pieces-only-absract-set-ebonised-boxwood-2-king",
     "description": "brutalism meets chess",
-    "draft": false
+    "draft": true
   },
   {
     "slug": "plans-goals-notebook",
