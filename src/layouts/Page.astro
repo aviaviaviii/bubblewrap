@@ -55,7 +55,7 @@ const marqueeItems = [...site.marquee, ...site.marquee];
 
     <footer class="footer">
       <p class="footer-label">• {site.newsletter.label}</p>
-      <form class="subscribe" method="POST" action={site.newsletter.action || undefined} id="subscribe">
+      <form class="subscribe" method="GET" action={site.newsletter.action} target="_blank" id="subscribe">
         <input type="email" name="email" placeholder="name@email.com" required autocomplete="email" aria-label="Email" />
         <button type="submit">Subscribe</button>
       </form>
@@ -76,13 +76,6 @@ const marqueeItems = [...site.marquee, ...site.marquee];
           try { localStorage.setItem("theme", root.dataset.theme); } catch (e) {}
           sync();
         });
-        const form = document.getElementById("subscribe");
-        if (!form.getAttribute("action")) {
-          form.addEventListener("submit", (e) => {
-            e.preventDefault();
-            form.querySelector("button").textContent = "Soon!";
-          });
-        }
       })();
     </script>
   </body>

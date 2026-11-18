@@ -25,7 +25,7 @@ npm run build    # static output in dist/
 
 - `/` shows **NEW** (the 12 most recently dated gifts) and then **SORTED BY PRICE** (every gift, most expensive first).
 - `/<tag>` (`/live`, `/play`, `/read`, `/wear`, `/cook`, `/santa`, `/work`) shows the same two sections for one tag. Only the tags in `navTags` appear in the menu.
-- `/success` is where the newsletter form should send people after signing up (copied from the live Framer page).
+- `/success` is the thank-you page from the live Framer site. Nothing links to it since the newsletter moved to Substack; kept in case a signup flow lands here again.
 - Gifts with `"draft": true` don't appear anywhere.
 
 Space Mono is self-hosted from `public/fonts/`, so the site makes no calls to Google Fonts.
@@ -60,5 +60,5 @@ npm run import:framer   # reads data/framer-collection.csv and rewrites src/data
 ## Before switching the domain off Framer
 
 1. **Images:** done for gifts. All 409 now load from `public/images/` as 800px webp, made from the PullPage asset export with `npm run images:import -- "<export folder>"`. Two other routes give the same result: `npm run images:local -- ~/Downloads` for loose files named by Framer image id or slug, and `npm run images:download` to fetch from Framer's CDN. All three write through `scripts/lib/gift-image.mjs`. The favicon and OG image are in `public/` too, so nothing loads from Framer anymore.
-2. **Newsletter:** the Framer form posted through Framer's own backend. Set `PUBLIC_NEWSLETTER_ACTION` to your email provider's form endpoint (the field is named `email`). Until it's set, the button only says "Soon!".
+2. **Newsletter:** done. The footer form opens [bubblewrapindia.substack.com](https://bubblewrapindia.substack.com/) in a new tab with the email filled in, and the reader confirms there. Signups from the Framer form live in Formspark (form `gnbd4wE8`); export them as CSV and import into Substack so nobody is lost.
 3. **Deploy:** works on any static host. On Vercel, import the repo; `vercel.json` already turns on clean URLs (`/live`, not `/live.html`).

@@ -24,10 +24,13 @@ export const site = {
   intro:
     "This site is a collection of links — to gifts that feel like art, ones you'll be tempted to keep and that warms the heart <3",
 
-  // Newsletter: set PUBLIC_NEWSLETTER_ACTION to your provider's form POST URL
-  // (Buttondown, Mailchimp, Loops, Beehiiv embed, …). Field name is "email".
+  // Newsletter: the footer form opens Substack's subscribe page in a new tab with
+  // the email already filled in (?email=), and the reader confirms there.
+  // Substack has no public endpoint a custom form can POST to; its own form uses
+  // an undocumented API, and its embed is a white box that can't be styled to match.
+  // Live Framer posted to Formspark and landed on /success, which is now unused.
   newsletter: {
     label: "once a month, just the new stuff *",
-    action: import.meta.env.PUBLIC_NEWSLETTER_ACTION ?? "",
+    action: "https://bubblewrapindia.substack.com/subscribe",
   },
 };
