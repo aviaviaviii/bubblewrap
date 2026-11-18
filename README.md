@@ -56,6 +56,6 @@ npm run import:framer   # reads data/framer-collection.csv and rewrites src/data
 
 ## Before switching the domain off Framer
 
-1. **Images:** gift images still load from `framerusercontent.com`. Run `npm run images:download` to copy them into `public/images/` and repoint the JSON, then commit. Do the same for the favicon and OG image in `src/site.config.ts`.
+1. **Images:** gift images still load from `framerusercontent.com`. If you already have them locally (named by Framer image id or by slug), run `npm run images:local -- ~/Downloads`. Otherwise run `npm run images:download` to copy them into `public/images/` and repoint the JSON, then commit. Do the same for the favicon and OG image in `src/site.config.ts`.
 2. **Newsletter:** the Framer form posted through Framer's own backend. Set `PUBLIC_NEWSLETTER_ACTION` to your email provider's form endpoint (the field is named `email`). Until it's set, the button only says "Soon!".
 3. **Deploy:** works on any static host. On Vercel, import the repo; `vercel.json` already turns on clean URLs (`/live`, not `/live.html`).

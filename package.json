@@ -3,13 +3,14 @@
   "type": "module",
   "version": "1.0.0",
   "private": true,
-  "description": "bubble—wrap · gifts that feel like art (bubblewrap.in)",
+  "description": "bubble\u2014wrap \u00b7 gifts that feel like art (bubblewrap.in)",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
     "import:framer": "node scripts/import-framer-csv.mjs data/framer-collection.csv",
-    "images:download": "node scripts/download-images.mjs"
+    "images:download": "node scripts/download-images.mjs",
+    "images:local": "node scripts/use-local-images.mjs"
   },
   "dependencies": {
     "astro": "7.4.12"
