@@ -28,16 +28,16 @@
     "draft": false
   },
   {
-    "slug": "sculpted-knot-cushion",
-    "title": "Sculpted Knot Cushion",
-    "image": "/images/sculpted-knot-cushion.webp",
-    "imageAlt": "Sculpted Knot Cushion",
-    "price": 5800,
+    "slug": "bloom-sculpted-cushion",
+    "title": "Bloom Sculpted Cushion",
+    "image": "/images/bloom-sculpted-cushion.webp",
+    "imageAlt": "Bloom Sculpted Cushion",
+    "price": 5500,
     "tags": [
       "live"
     ],
     "date": "2026-11-13",
-    "link": "https://lovingslowly.com/products/sculpted-knot-cushion",
+    "link": "https://lovingslowly.com/products/scarlet-bloom-sculpted-cushion",
     "description": "",
     "draft": false
   },
@@ -633,10 +633,10 @@
     "tags": [
       "cook"
     ],
-    "date": "2026-07-27",
+    "date": "2025-11-18",
     "link": "https://www.amazon.in/SALT-ACID-HEAT-Samin-Nosrat/dp/1476753830",
     "description": "",
-    "draft": true
+    "draft": false
   },
   {
     "slug": "i-can-cook-vegan",
@@ -676,10 +676,10 @@
     "tags": [
       "read"
     ],
-    "date": "2026-07-27",
+    "date": "2026-08-06",
     "link": "https://www.amazon.in/-/hi/Estrid-Ericson/dp/0500293295",
     "description": "",
-    "draft": true
+    "draft": false
   },
   {
     "slug": "pasta-for-the-people",
@@ -718,7 +718,7 @@
     "tags": [
       "read"
     ],
-    "date": "2026-11-18",
+    "date": "2026-10-01",
     "link": "https://www.amazon.in/dp/1941753213/ref=cm_sw_r_as_gl_api_gl_i_P5BGW2KABQWA01MFSTS1",
     "description": "",
     "draft": false
@@ -775,10 +775,10 @@
     "tags": [
       "read"
     ],
-    "date": "2026-07-27",
+    "date": "2026-11-18",
     "link": "https://shop.offaloffaloffal.com/products/offal-1",
     "description": "",
-    "draft": true
+    "draft": false
   },
   {
     "slug": "no.16-eyes-wide-open-by-emma-larsson",

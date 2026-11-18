@@ -39,10 +39,38 @@ const analytics =
 <link rel="preload" href="/fonts/space-mono-400.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="preload" href="/fonts/space-mono-700.woff2" as="font" type="font/woff2" crossorigin />
 <script is:inline>
-  try {
-    const t = localStorage.getItem("theme");
-    if (t) document.documentElement.dataset.theme = t;
-  } catch (e) {}
+  // Theme follows the visitor's local clock: day from 7:00 to 19:00, night otherwise.
+  // A tap on the toggle holds until the next 7:00 or 19:00 switch, then the clock takes
+  // over again. Saving it forever (the old "theme" key) meant one tap opted a visitor
+  // out of time-of-day for good, so that key is dropped. Without JS the CSS still
+  // falls back to the system setting.
+  (() => {
+    const root = document.documentElement;
+    const DAY = 7, NIGHT = 19;
+    const byClock = (d) => (d.getHours() >= DAY && d.getHours() < NIGHT ? "light" : "dark");
+    const nextSwitch = (d) => {
+      const n = new Date(d);
+      const h = d.getHours();
+      if (h < DAY) n.setHours(DAY, 0, 0, 0);
+      else if (h < NIGHT) n.setHours(NIGHT, 0, 0, 0);
+      else { n.setDate(n.getDate() + 1); n.setHours(DAY, 0, 0, 0); }
+      return n.getTime();
+    };
+    const now = new Date();
+    let theme = byClock(now);
+    try {
+      localStorage.removeItem("theme");
+      const pick = JSON.parse(localStorage.getItem("theme-pick") || "null");
+      if (pick && pick.until > now.getTime()) theme = pick.theme;
+    } catch (e) {}
+    root.dataset.theme = theme;
+    window.bwSetTheme = (t) => {
+      root.dataset.theme = t;
+      try {
+        localStorage.setItem("theme-pick", JSON.stringify({ theme: t, until: nextSwitch(new Date()) }));
+      } catch (e) {}
+    };
+  })();
 </script>
 {
   analytics && (

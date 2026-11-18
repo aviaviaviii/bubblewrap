@@ -11,8 +11,10 @@ export const site = {
   // Tags shown in the top nav. Every tag in the data still gets its own page (/cook, /santa, …).
   navTags: ["live", "play", "read", "wear"],
 
-  // How many of the most recently dated gifts appear under "NEW".
-  newCount: 12,
+  // The fewest of the most recently dated gifts "NEW" shows. It shows them in full
+  // rows only, so the real number follows the columns (newVisible in lib/gifts.ts):
+  // 3 columns 9, 4 → 12, 5 → 10, 6 → 12, 7 → 14, 8 → 16.
+  newMin: 9,
 
   // Scrolling banner (desktop) and intro block (mobile).
   marquee: [

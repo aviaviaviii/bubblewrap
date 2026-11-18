@@ -140,8 +140,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # Skipped while the repo is private: GitHub's dependency review needs GitHub
+      # Advanced Security on private repos, so here it failed every PR with "Dependency
+      # review is not supported on this repository" (Dependabot PRs, 2026-11-18). The
+      # npm audit steps above still fail a PR on critical advisories. If the repo goes
+      # public (or gets Advanced Security), this runs again with no change needed.
       - name: Review new dependencies
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && !github.event.repository.private
         uses: actions/dependency-review-action@v4
         with:
           fail-on-severity: critical
