@@ -171,6 +171,20 @@ ul { list-style: none; margin: 0; padding: 0; }
   margin: 0 auto 64px;
 }
 .grid > li { width: var(--card-w); }
+
+/* NEW shows full rows only (GiftGrid fullRows). Each card says in data-hide at
+   which column counts it would start a ragged row, and the queries below match
+   the section's own width to the column count .grid gives it: n columns need
+   n * 244px - 24px. Queried on the section, not the viewport, so a desktop
+   scrollbar can't put the count one column off. Keep in step with --card-w,
+   --grid-gap and --grid-max-cols above; e2e "home" checks every count. */
+.section.full-rows { container: grid-section / inline-size; }
+@container grid-section (width < 952px) { .grid > [data-hide~="3"] { display: none; } }
+@container grid-section (952px <= width < 1196px) { .grid > [data-hide~="4"] { display: none; } }
+@container grid-section (1196px <= width < 1440px) { .grid > [data-hide~="5"] { display: none; } }
+@container grid-section (1440px <= width < 1684px) { .grid > [data-hide~="6"] { display: none; } }
+@container grid-section (1684px <= width < 1928px) { .grid > [data-hide~="7"] { display: none; } }
+@container grid-section (width >= 1928px) { .grid > [data-hide~="8"] { display: none; } }
 .card { display: flex; flex-direction: column; gap: 12px; }
 .card-image {
   display: block;

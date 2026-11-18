@@ -95,7 +95,7 @@ describe("site.config", () => {
     expect(existsSync(`public${site.favicon}`)).toBe(true);
   });
 
-  it("newCount is a positive whole number", () => {
-    expect(Number.isInteger(site.newCount) && site.newCount > 0).toBe(true);
+  it("newMin is a positive whole number", () => {
+    expect(Number.isInteger(site.newMin) && site.newMin > 0).toBe(true);
   });
 });
