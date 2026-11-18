@@ -172,9 +172,33 @@ ul { list-style: none; margin: 0; padding: 0; }
   width: 100%;
   height: 100%;
   object-fit: contain;
-  transition: transform 0.25s ease;
 }
-.card:hover img { transform: scale(1.03); }
+/* Hover shows the gift's name on a band-coloured panel over the photo, measured
+   from the live Framer card: 196x106 panel (12px in from each side), centred just
+   above the middle, name wrapped at 133px, uppercase. Swaps instantly, as on live.
+   Replaced a 1.03 image zoom from the migration, which live never had.
+   Only on devices that can hover, so a tap on a phone doesn't leave it stuck on. */
+.card-title { display: none; }
+@media (hover: hover) {
+  .card-title {
+    position: absolute;
+    z-index: 1;
+    top: calc(49.1667% - 53px);
+    left: 12px;
+    right: 12px;
+    height: 106px;
+    align-items: center;
+    justify-content: center;
+    background: var(--band);
+    color: var(--band-fg);
+    text-align: center;
+    text-transform: uppercase;
+    line-height: 1.4;
+  }
+  .card-title > span { width: 133px; max-width: 100%; overflow-wrap: break-word; }
+  .card:hover .card-title,
+  .card:focus-visible .card-title { display: flex; }
+}
 .card-price { text-align: center; color: var(--muted); }
 
 /* ---------- footer ---------- */

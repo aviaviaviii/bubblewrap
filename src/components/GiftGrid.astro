@@ -15,8 +15,12 @@ const { heading, gifts, eager = false } = Astro.props;
     {
       gifts.map((g, i) => (
         <li>
-          <a class="card" href={g.link} target="_blank" rel="noopener" title={g.description || g.title}>
+          {/* No title attribute: the hover panel shows the name, and the live Framer
+              site has no native tooltip. Descriptions aren't shown anywhere on live either. */}
+          <a class="card" href={g.link} target="_blank" rel="noopener">
             <span class="card-image">
+              {/* aria-hidden: the image alt already gives the name to screen readers. */}
+              <span class="card-title" aria-hidden="true"><span>{g.title}</span></span>
               <img
                 src={g.image}
                 alt={g.imageAlt}
