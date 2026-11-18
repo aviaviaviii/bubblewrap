@@ -4,8 +4,15 @@ import data from "../src/data/gifts.json" with { type: "json" };
 
 const live = data.filter((g) => !g.draft);
 const tags = [...new Set(live.flatMap((g) => g.tags))].sort();
-const NEW_COUNT = 12;
+// NEW renders 16 (enough for 8 columns) and CSS shows only full rows; see below.
+const NEW_COUNT = 16;
 const SCRIPT = /script\.google\.com/;
+// The one outside service the public pages may call: PostHog analytics, chosen on
+// purpose (see Head.astro). Its events go to us.i.posthog.com and its script comes
+// from us-assets.i.posthog.com (site.config.ts `posthog.host`); anything else outside
+// still fails the check below. Written out here because site.config.ts reads
+// import.meta.env, which Playwright's Node runner doesn't provide.
+const ANALYTICS = /(^|\.)i\.posthog\.com$/;
 
 test.describe("home", () => {
   test("shows NEW and SORTED BY PRICE with every live gift", async ({ page }) => {
@@ -54,7 +61,7 @@ test.describe("home", () => {
     page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
     page.on("request", (r) => {
       const u = new URL(r.url());
-      if (u.hostname !== "localhost" && !u.protocol.startsWith("data")) outside.push(r.url());
+      if (u.hostname !== "localhost" && !u.protocol.startsWith("data") && !ANALYTICS.test(u.hostname)) outside.push(r.url());
     });
     await page.goto("/");
     await page.waitForLoadState("networkidle");
@@ -66,6 +73,30 @@ test.describe("home", () => {
     await page.goto("/");
     const [scroll, width] = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
     expect(scroll).toBeLessThanOrEqual(width);
+  });
+
+  // Columns follow the width up to an 8-column cap (global.css `.grid`), so
+  // tablets and wide monitors fill the screen instead of stopping at 3 or 5.
+  // NEW then shows only full rows: the fewest that reach 9 gifts.
+  const COLUMNS: [number, number, number][] = [
+    [820, 3, 9], [1024, 4, 12], [1180, 4, 12], [1366, 5, 10], [1512, 6, 12], [1788, 7, 14], [1920, 7, 14], [2560, 8, 16],
+  ];
+  for (const [width, cols, shown] of COLUMNS) {
+    test(`shows ${cols} columns and ${shown} NEW gifts in full rows at ${width}px`, async ({ page, isMobile }) => {
+      test.skip(isMobile, "phone widths keep their own 3-column grid");
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto("/");
+      const tops = await page.locator("section.section").first().locator(".grid > li")
+        .evaluateAll((lis) => lis.filter((li) => li.getClientRects().length).map((li) => Math.round(li.getBoundingClientRect().top)));
+      expect(tops.filter((t) => t === tops[0])).toHaveLength(cols);
+      expect(tops).toHaveLength(shown);
+    });
+  }
+
+  test("NEW shows 9 gifts in 3 full rows on a phone", async ({ page, isMobile }) => {
+    test.skip(!isMobile, "phone only");
+    await page.goto("/");
+    await expect(page.locator("section.section").first().locator(".grid > li:visible")).toHaveCount(9);
   });
 });
 
@@ -99,24 +130,49 @@ test.describe("tags", () => {
 });
 
 test.describe("night mode", () => {
-  test("toggles and is remembered across pages", async ({ page }) => {
-    await page.emulateMedia({ colorScheme: "light" });
+  // The theme follows the visitor's local clock (day 7:00 to 19:00); a tap holds until
+  // the next switch. Dates have no offset, so they read as the browser's local time.
+  test("is day in the daytime and night at night", async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-11-18T10:00:00"));
+    await page.goto("/");
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+    await expect(page.locator("#theme-toggle")).toHaveText("NIGHT");
+
+    await page.clock.setFixedTime(new Date("2026-11-18T21:00:00"));
+    await page.goto("/");
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+    await expect(page.locator("#theme-toggle")).toHaveText("DAY");
+  });
+
+  test("ignores the system setting", async ({ page }) => {
+    await page.emulateMedia({ colorScheme: "dark" });
+    await page.clock.setFixedTime(new Date("2026-11-18T10:00:00"));
+    await page.goto("/");
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  });
+
+  test("a tap is remembered across pages until the next switch", async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-11-18T10:00:00"));
     await page.goto("/");
     const btn = page.locator("#theme-toggle");
-    await expect(btn).toHaveText("NIGHT");
     await btn.click();
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
     await expect(btn).toHaveText("DAY");
     await page.goto("/read");
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+
+    // After 19:00 the tap has expired and the clock decides again (night).
+    await page.clock.setFixedTime(new Date("2026-11-18T19:30:00"));
+    await page.goto("/");
     await page.locator("#theme-toggle").click();
     await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
-  });
-
-  test("follows the system setting until chosen", async ({ page }) => {
-    await page.emulateMedia({ colorScheme: "dark" });
+    // The next morning the clock takes over again.
+    await page.clock.setFixedTime(new Date("2026-11-19T08:00:00"));
     await page.goto("/");
-    await expect(page.locator("#theme-toggle")).toHaveText("DAY");
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+    await page.clock.setFixedTime(new Date("2026-11-19T20:00:00"));
+    await page.goto("/");
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   });
 });
 

@@ -4,8 +4,20 @@
     {
       "name": "bubblewrap",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
       "port": 4321
+    },
+    {
+      "name": "bubblewrap-built",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "-e",
+        "const h=require('http'),f=require('fs'),p=require('path'),r=process.env.STATIC_DIR||'.vercel/output/static';h.createServer((q,s)=>{let u=decodeURI(q.url.split('?')[0]);let x=p.join(r,u);if(f.existsSync(x)&&f.statSync(x).isDirectory())x=p.join(x,'index.html');f.readFile(x,(e,b)=>{if(e){s.writeHead(404);return s.end()}s.writeHead(200,{'content-type':{'.html':'text/html','.js':'text/javascript','.css':'text/css','.woff2':'font/woff2'}[p.extname(x)]||'application/octet-stream'});s.end(b)})}).listen(process.env.PORT||4329)"
+      ],
+      "port": 4329
     }
   ]
 }

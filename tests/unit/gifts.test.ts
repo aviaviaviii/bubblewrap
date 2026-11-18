@@ -1,7 +1,7 @@
 // What the pages show: the NEW and SORTED BY PRICE sections, tags and price format.
 import { describe, it, expect } from "vitest";
 import data from "../../src/data/gifts.json";
-import { gifts, allTags, sections, formatPrice } from "../../src/lib/gifts";
+import { gifts, allTags, sections, formatPrice, newVisible, GRID_COLUMNS } from "../../src/lib/gifts";
 import { site } from "../../src/site.config";
 
 describe("gifts", () => {
@@ -16,9 +16,9 @@ describe("gifts", () => {
 });
 
 describe("sections", () => {
-  it("NEW is the newest gifts, capped at newCount, newest first", () => {
+  it("NEW is the newest gifts, enough for the widest grid, newest first", () => {
     const { newest } = sections();
-    expect(newest.length).toBe(Math.min(site.newCount, gifts.length));
+    expect(newest.length).toBe(Math.max(...GRID_COLUMNS.map((n) => newVisible(gifts.length, n))));
     for (let i = 1; i < newest.length; i++) expect((newest[i - 1].date ?? "") >= (newest[i].date ?? "")).toBe(true);
     const cutoff = newest.at(-1)!.date ?? "";
     expect(gifts.filter((g) => (g.date ?? "") > cutoff).every((g) => newest.includes(g))).toBe(true);
@@ -34,6 +34,18 @@ describe("sections", () => {
     const { newest, byPrice } = sections(tag);
     expect(byPrice.length).toBe(gifts.filter((g) => g.tags.includes(tag)).length);
     expect([...newest, ...byPrice].every((g) => g.tags.includes(tag))).toBe(true);
+  });
+
+  it("NEW fills whole rows at every column count", () => {
+    expect(GRID_COLUMNS.map((n) => newVisible(400, n))).toEqual([9, 12, 10, 12, 14, 16]);
+  });
+
+  it("a small tag rounds NEW down to whole rows, or shows one short row", () => {
+    expect(newVisible(11, 3)).toBe(9);
+    expect(newVisible(11, 7)).toBe(7);
+    expect(newVisible(5, 7)).toBe(5);
+    expect(newVisible(5, 3)).toBe(3);
+    expect(newVisible(0, 4)).toBe(0);
   });
 
   it("an unknown tag gives empty sections", () => {
