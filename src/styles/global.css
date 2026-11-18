@@ -25,6 +25,7 @@
   --button-bg: #333;
   --font: "Space Mono", ui-monospace, monospace;
   --gutter: 32px;
+  --header-h: 207px; /* shared by .header and the sticky .nav that overlaps it */
   color-scheme: light;
 }
 
@@ -94,8 +95,10 @@ ul { list-style: none; margin: 0; padding: 0; }
 /* ---------- header ---------- */
 .header {
   margin: 0 var(--gutter);
-  padding-top: 18px;
-  height: 207px;
+  /* 18px above the nav + its 26px row. The nav now lives outside the header
+     (see .nav), so this keeps the logo where it sat when the nav was inside. */
+  padding-top: 44px;
+  height: var(--header-h);
   display: flex;
   flex-direction: column;
   border-bottom: 1px solid var(--fg);
@@ -106,12 +109,33 @@ ul { list-style: none; margin: 0; padding: 0; }
 }
 /* The static pattern above is the no-JS fallback; HeaderDots draws the live one. */
 .header.has-dots { background-image: none; }
-.nav, .logo { position: relative; z-index: 1; }
+.logo { position: relative; z-index: 1; }
+/* Sticky nav, logo scrolls away. The nav follows the header in the DOM and is
+   pulled up over the header's top row: 62px tall (18 + 26 row + 18) so its links
+   sit exactly where they did inside the header, and the margin-bottom hands the
+   space back so <main> still starts under the header's rule.
+   At rest it is transparent so the dot field shows through; .is-stuck (set from
+   Page.astro) makes it solid with a hairline that echoes the header's rule. The
+   two sideways shadows paint the gutters so cards don't peek past the edges.
+   z-index 10 clears the card hover panel (z-index 1). */
 .nav {
+  --nav-h: 62px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  height: var(--nav-h);
+  margin: calc(-1 * var(--header-h)) var(--gutter) calc(var(--header-h) - var(--nav-h));
   background: transparent;
+}
+.nav.is-stuck {
+  background: var(--bg);
+  box-shadow:
+    inset 0 -1px var(--fg),
+    calc(-1 * var(--gutter)) 0 0 var(--bg),
+    var(--gutter) 0 0 var(--bg);
 }
 .nav ul { display: flex; gap: 0; }
 .nav a, .theme-toggle {
@@ -311,17 +335,42 @@ ul { list-style: none; margin: 0; padding: 0; }
     line-height: 1.6;
     letter-spacing: -0.03em;
   }
+  /* Phone: logo, then the nav, then the rule. The rule moves from the header to
+     the nav so it travels with the bar when stuck. Gap above the nav stays 40px
+     (logo 28 + nav 12), padding-bottom 16 = the old header's.
+     Only the categories stick. Night and Author sit on their own row above the
+     tags, and the nav sticks at a negative top equal to that row (12px padding +
+     26px row), so the row slides off and the stuck bar is one row of tags (54px).
+     Tried first: tags and Night/Author side by side, all sticky. The tags wrapped
+     to two rows in the 60% they had, so the stuck bar was 80px. Hiding Night/Author
+     only when stuck was rejected: the tags would reflow and the page would jump. */
   .header {
     height: auto;
-    padding: 0 0 16px;
+    padding: 0;
     background: none;
-    flex-direction: column-reverse;
+    border-bottom: 0;
   }
-  .logo { margin: 48px 0 40px; font-size: 44px; }
+  .logo { margin: 48px 0 28px; font-size: 44px; }
   .logo-full { display: none; }
   .logo-short { display: inline; }
-  .nav { align-items: flex-start; }
-  .nav-tags { flex-wrap: wrap; row-gap: 8px; max-width: 60%; }
+  .nav {
+    --nav-row: 26px;
+    top: calc(-12px - var(--nav-row));
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    height: auto;
+    margin: 0 var(--gutter);
+    padding: 12px 0 16px;
+    border-bottom: 1px solid var(--fg);
+  }
+  .nav.is-stuck {
+    box-shadow:
+      calc(-1 * var(--gutter)) 0 0 var(--bg),
+      var(--gutter) 0 0 var(--bg);
+  }
+  .nav-right { order: -1; justify-content: flex-end; height: var(--nav-row); }
+  .nav-tags { flex-wrap: wrap; row-gap: 8px; }
   .nav a, .theme-toggle { margin-right: 20px; }
   .grid {
     display: grid;
