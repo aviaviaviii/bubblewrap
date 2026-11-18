@@ -100,6 +100,53 @@ test.describe("home", () => {
   });
 });
 
+test.describe("price filter", () => {
+  const priced = (lo: number, hi: number) => live.filter((g) => g.price >= lo && g.price < hi).length;
+
+  test("narrows SORTED BY PRICE to one band, low to high, and leaves NEW alone", async ({ page }) => {
+    await page.goto("/");
+    const sorted = page.locator("section.section").nth(1);
+    const menu = sorted.getByLabel("Price");
+    const shownPrices = async () =>
+      (await sorted.locator(".card:visible .card-price").allTextContents()).map((p) => Number(p.replace(/[₹,]/g, "")));
+    await expect(menu).toHaveValue("");
+    await menu.selectOption("1000-2500");
+    await expect(page).toHaveURL(/\?price=1000-2500$/);
+    await expect(sorted.locator(".card:visible")).toHaveCount(priced(1000, 2500));
+    const band = await shownPrices();
+    expect(band.every((p) => p >= 1000 && p < 2500)).toBe(true);
+    expect(band).toEqual([...band].sort((a, b) => a - b));
+    await expect(page.locator("section.section").nth(0).locator(".card")).toHaveCount(Math.min(NEW_COUNT, live.length));
+    await menu.selectOption("");
+    await expect(page).toHaveURL(/\/$/);
+    await expect(sorted.locator(".card:visible")).toHaveCount(live.length);
+    const all = await shownPrices();
+    expect(all).toEqual([...all].sort((a, b) => b - a));
+  });
+
+  test("a shared ?price= link opens filtered, on tag pages too", async ({ page }) => {
+    await page.goto("/read?price=over-10000");
+    const sorted = page.locator("section.section").nth(1);
+    await expect(sorted.getByLabel("Price")).toHaveValue("over-10000");
+    await expect(sorted.locator(".card:visible")).toHaveCount(live.filter((g) => g.tags.includes("read") && g.price >= 10000).length);
+  });
+
+  test("UNDER ₹500 shows only gifts under ₹500, low to high", async ({ page }) => {
+    await page.goto("/?price=under-500");
+    const sorted = page.locator("section.section").nth(1);
+    await expect(sorted.getByLabel("Price")).toHaveValue("under-500");
+    await expect(sorted.locator(".card:visible")).toHaveCount(priced(0, 500));
+    const prices = (await sorted.locator(".card:visible .card-price").allTextContents()).map((p) => Number(p.replace(/[₹,]/g, "")));
+    expect(prices.every((p) => p < 500)).toBe(true);
+    expect(prices).toEqual([...prices].sort((a, b) => a - b));
+  });
+
+  test("an unknown ?price= shows everything", async ({ page }) => {
+    await page.goto("/?price=free");
+    await expect(page.locator("section.section").nth(1).locator(".card:visible")).toHaveCount(live.length);
+  });
+});
+
 test.describe("tags", () => {
   test("nav marks the current page", async ({ page }) => {
     await page.goto("/");

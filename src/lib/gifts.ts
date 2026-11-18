@@ -48,3 +48,19 @@ export function sections(tag?: string) {
 
 const inr = new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 });
 export const formatPrice = (p: number) => `₹${inr.format(p)}`;
+
+// The price menu on SORTED BY PRICE. Each band runs from min up to, not including,
+// max, so a ₹2,500 gift sits in "₹2,500 TO ₹5,000". Cut where the list actually
+// splits (Nov 2026, 409 live gifts: 117 · 134 · 92 · 47 · 19), round numbers people
+// budget in, and every nav tag has gifts in each band. The id is what ?price= carries.
+// UNDER ₹500 (40 gifts) is a tighter cap inside UNDER ₹1,000, not a slice of it, so
+// a ₹400 gift is in both; the rest run end to end. Splitting it into ₹500 TO ₹1,000
+// was the other option; kept UNDER ₹1,000 as it was asked for unchanged.
+export const priceBands = [
+  { id: "under-500", label: `UNDER ${formatPrice(500)}`, min: 0, max: 500 },
+  { id: "under-1000", label: `UNDER ${formatPrice(1000)}`, min: 0, max: 1000 },
+  { id: "1000-2500", label: `${formatPrice(1000)} TO ${formatPrice(2500)}`, min: 1000, max: 2500 },
+  { id: "2500-5000", label: `${formatPrice(2500)} TO ${formatPrice(5000)}`, min: 2500, max: 5000 },
+  { id: "5000-10000", label: `${formatPrice(5000)} TO ${formatPrice(10000)}`, min: 5000, max: 10000 },
+  { id: "over-10000", label: `OVER ${formatPrice(10000)}`, min: 10000, max: Infinity },
+] as const;

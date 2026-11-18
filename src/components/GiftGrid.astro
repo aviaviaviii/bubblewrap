@@ -1,5 +1,5 @@
 ---
-import { formatPrice, newVisible, GRID_COLUMNS, type Gift } from "../lib/gifts";
+import { formatPrice, newVisible, priceBands, GRID_COLUMNS, type Gift } from "../lib/gifts";
 
 interface Props {
   heading: string;
@@ -8,18 +8,54 @@ interface Props {
   /** Show only full rows (NEW). Each card lists the column counts it hides at;
       global.css turns that into display:none per grid width. */
   fullRows?: boolean;
+  /** A price menu beside the heading that narrows this grid to one price band. */
+  priceFilter?: boolean;
 }
-const { heading, gifts, eager = false, fullRows = false } = Astro.props;
+const { heading, gifts, eager = false, fullRows = false, priceFilter = false } = Astro.props;
 const hideAt = (i: number) =>
   fullRows ? GRID_COLUMNS.filter((n) => i >= newVisible(gifts.length, n)).join(" ") || undefined : undefined;
+// Only bands this page has gifts in; a band that would show an empty grid isn't offered.
+const bands = priceFilter ? priceBands.filter((b) => gifts.some((g) => g.price >= b.min && g.price < b.max)) : [];
 ---
 
 <section class:list={["section", { "full-rows": fullRows }]}>
-  <h2 class="section-heading">{heading}</h2>
+  {
+    priceFilter ? (
+      // Price filter: one quiet menu in the heading row, written like the nav (caps,
+      // underline on hover), not a chip row or a min/max slider. It sits on SORTED BY
+      // PRICE because that's the grid already ordered by price, so a band is one
+      // unbroken slice of it. It narrows this grid only: hiding NEW as well would pull
+      // the whole page up under the visitor's finger the moment they pick. Fixed bands
+      // (lib/gifts.ts) over a custom range: on a gift site people shop to a budget, and
+      // a native menu is the phone's own picker for free. A picked band lists low to
+      // high (see the script); ANY PRICE stays high to low. The pick lives in ?price= so
+      // a filtered view can be shared. Without JS the menu stays hidden; the grid is whole.
+      // Tried first and dropped the same day: a time-range menu here (asked for by
+      // mistake; price was meant).
+      // The menu is the visible heading: set in the heading's type, it reads "ANY PRICE ↓"
+      // where SORTED BY PRICE was, and the prices under each card say the order. The
+      // heading stays for screen readers (and to restore: drop "sr"). Tried and pulled
+      // first: the heading with the menu beside it, then at the far end of the row.
+      <div class="section-head">
+        <h2 class="section-heading sr">{heading}</h2>
+        <label class="grid-filter" hidden>
+          <span class="sr">Price</span>
+          <span class="grid-filter-value" aria-hidden="true">ANY PRICE</span>
+          <span aria-hidden="true">↓</span>
+          <select data-price-filter>
+            <option value="">ANY PRICE</option>
+            {bands.map((b) => <option value={b.id} data-min={b.min} data-max={b.max}>{b.label}</option>)}
+          </select>
+        </label>
+      </div>
+    ) : (
+      <h2 class="section-heading">{heading}</h2>
+    )
+  }
   <ul class="grid">
     {
       gifts.map((g, i) => (
-        <li data-hide={hideAt(i)}>
+        <li data-hide={hideAt(i)} data-price={priceFilter ? g.price : undefined}>
           {/* No title attribute: the hover panel shows the name, and the live Framer
               site has no native tooltip. Descriptions aren't shown anywhere on live either. */}
           <a class="card" href={g.link} target="_blank" rel="noopener">
@@ -42,3 +78,37 @@ const hideAt = (i: number) =>
     }
   </ul>
 </section>
+
+<script>
+  for (const select of document.querySelectorAll<HTMLSelectElement>("[data-price-filter]")) {
+    const grid = select.closest("section")!.querySelector<HTMLUListElement>(".grid")!;
+    const items = [...grid.querySelectorAll<HTMLLIElement>(":scope > li")];
+    const shown = select.closest("label")!.querySelector<HTMLElement>(".grid-filter-value")!;
+
+    // ANY PRICE lists high to low, as built. A picked band lists low to high: someone
+    // shopping to a budget starts from the cheapest and works up. The cards are moved
+    // in the DOM (not CSS order) so tabbing and screen readers follow what's on screen.
+    // The build order is already high to low, so low to high is its exact reverse; ties
+    // keep a stable order either way.
+    const apply = () => {
+      const o = select.selectedOptions[0];
+      shown.textContent = o.text;
+      const [min, max] = [Number(o.dataset.min ?? 0), Number(o.dataset.max ?? Infinity)];
+      for (const li of items) {
+        const p = Number(li.dataset.price);
+        li.hidden = !(p >= min && p < max);
+      }
+      grid.append(...(select.value ? [...items].reverse() : items));
+      const url = new URL(location.href);
+      if (select.value) url.searchParams.set("price", select.value);
+      else url.searchParams.delete("price");
+      history.replaceState(null, "", url);
+    };
+
+    const wanted = new URL(location.href).searchParams.get("price") ?? "";
+    if ([...select.options].some((o) => o.value === wanted)) select.value = wanted;
+    select.addEventListener("change", apply);
+    if (select.value) apply();
+    select.closest("label")!.hidden = false;
+  }
+</script>

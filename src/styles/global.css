@@ -150,6 +150,36 @@ ul { list-style: none; margin: 0; padding: 0; }
   font-size: 12px;
   font-weight: 700;
 }
+/* The price menu stands in for the section heading (its h2 is screen-reader only), so
+   it wears the heading's type: 12px bold. The row takes the heading's margins so the
+   grid below starts exactly where it did with the heading. Built at the far end of
+   the row first, then beside the heading, Nov 2026. */
+.section-head {
+  display: flex;
+  align-items: baseline;
+  margin: 20px 0 32px;
+}
+.section-head .section-heading { margin: 0; }
+/* The visible text is a span; the real <select> lies over it, invisible. A native
+   select is as wide as its longest option, which left the ↓ floating far from a short
+   choice like ANY PRICE. Tapping still opens the browser's own picker. */
+/* Padding gives a taller tap target and keeps the focus ring off the text (2px each
+   side); the matching negative margin keeps the text exactly where the heading's sat. */
+.grid-filter { position: relative; display: inline-flex; align-items: baseline; gap: 4px; font-size: 12px; font-weight: 700; padding: 4px 2px; margin: -4px -2px; cursor: pointer; }
+.grid-filter[hidden] { display: none; }
+.grid-filter select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0;
+  font: inherit;
+  cursor: pointer;
+}
+.grid-filter:hover .grid-filter-value { text-decoration: underline; text-underline-offset: 3px; }
+.grid-filter:has(select:focus-visible) { outline: 1px solid var(--fg); outline-offset: 2px; }
+.grid-filter option { color: initial; background: initial; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.grid > li[hidden] { display: none; }
 /* The column count is not set per breakpoint. Cards keep one size and the row
    takes as many as fit, up to --grid-max-cols, so every width gets its own fit
    (1024: 4, 1180: 4, 1366: 5, 1512: 6, 1788: 7, 2000+: 8).
