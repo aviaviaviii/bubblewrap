@@ -2,7 +2,6 @@
 import { describe, it, expect } from "vitest";
 import data from "../../src/data/gifts.json";
 import { gifts, allTags, sections, formatPrice, newVisible, priceBands, GRID_COLUMNS } from "../../src/lib/gifts";
-import { site } from "../../src/site.config";
 
 describe("gifts", () => {
   it("leaves out drafts", () => {

@@ -103,7 +103,8 @@ export function fakeGitHub(initialGifts: unknown[], opts: { conflictOnce?: boole
       const sha = id("c");
       const base = commits.get(body.parents[0])!.files;
       const next = new Map(base);
-      for (const [p, b] of trees.get(body.tree)!) next.set(p, blobs.get(b)!);
+      // Like GitHub: a tree entry with sha null removes that file (how delete drops the image).
+      for (const [p, b] of trees.get(body.tree)!) b === null ? next.delete(p) : next.set(p, blobs.get(b)!);
       commits.set(sha, { tree: body.tree, message: body.message, parents: body.parents, files: next });
       return res(201, { sha });
     }

@@ -1,6 +1,6 @@
 // /api/gift, the one server route: password gate, every action, both stores.
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import sharp from "sharp";
 import { POST } from "../../src/pages/api/gift";
@@ -218,6 +218,57 @@ describe("publish (local store)", () => {
   });
 });
 
+describe("delete (local store)", () => {
+  const image = (slug: string) => join(project.dir, `public/images/${slug}.webp`);
+  const putImage = (slug: string) => writeFileSync(image(slug), "webp");
+
+  it("removes the gift and its image, and nothing else", async () => {
+    putImage("paper-lamp");
+    putImage("chess-set");
+    const r = await call(withPass({ action: "delete", slug: "paper-lamp" }));
+    expect(r).toMatchObject({ status: 200, body: { title: "Paper Lamp", slug: "paper-lamp", where: "local" } });
+    expect(readGifts().map((g: { slug: string }) => g.slug)).toEqual(["chess-set", "secret-thing"]);
+    expect(existsSync(image("paper-lamp"))).toBe(false);
+    expect(existsSync(image("chess-set"))).toBe(true);
+  });
+
+  it("deletes a draft too", async () => {
+    const r = await call(withPass({ action: "delete", slug: "secret-thing" }));
+    expect(r.status).toBe(200);
+    expect(readGifts().some((g: { slug: string }) => g.slug === "secret-thing")).toBe(false);
+  });
+
+  it("keeps the image when another gift still uses the same file", async () => {
+    project.cleanup();
+    project = tempProject([gift(), gift({ slug: "paper-lamp-2", title: "Paper Lamp Two", link: "https://shop.example/paper-lamp-2" })]);
+    process.chdir(project.dir);
+    putImage("paper-lamp");
+    await call(withPass({ action: "delete", slug: "paper-lamp" }));
+    expect(readGifts().map((g: { slug: string }) => g.slug)).toEqual(["paper-lamp-2"]);
+    expect(existsSync(image("paper-lamp"))).toBe(true);
+  });
+
+  it("still succeeds when the image file is already missing", async () => {
+    const r = await call(withPass({ action: "delete", slug: "chess-set" }));
+    expect(r.status).toBe(200);
+  });
+
+  it("a gift that's gone is a 400 and changes nothing", async () => {
+    const before = readGifts();
+    const r = await call(withPass({ action: "delete", slug: "ghost" }));
+    expect(r).toMatchObject({ status: 400, body: { error: "That gift isn't in the list anymore" } });
+    expect(readGifts()).toEqual(before);
+  });
+
+  it("needs the password", async () => {
+    putImage("paper-lamp");
+    const r = await call({ password: "nope", action: "delete", slug: "paper-lamp" });
+    expect(r.status).toBe(401);
+    expect(readGifts()).toHaveLength(3);
+    expect(existsSync(image("paper-lamp"))).toBe(true);
+  });
+});
+
 describe("store choice", () => {
   it("in production without a GitHub token, says so instead of writing files", async () => {
     vi.stubEnv("DEV", false);
@@ -254,6 +305,21 @@ describe("GitHub store", () => {
     expect(gh.head().files.has("public/images/moon-lamp.webp")).toBe(true);
     expect(gh.gifts()[0].slug).toBe("moon-lamp");
     expect(existsSync(join(project.dir, "public/images/moon-lamp.webp"))).toBe(false); // nothing written locally
+  });
+
+  it("deletes a gift and its image as ONE commit", async () => {
+    const gh = fakeGitHub(sampleGifts());
+    useGitHub(gh);
+    // Put the image in the repo first, the way an add would have.
+    await call(withPass({ action: "edit", slug: "paper-lamp", title: "Paper Lamp", price: "2499", tags: ["live"], link: "https://shop.example/paper-lamp", status: "live" }), { name: "p.png", data: await png() });
+    expect(gh.head().files.has("public/images/paper-lamp.webp")).toBe(true);
+    const before = gh.commitCount();
+    const r = await call(withPass({ action: "delete", slug: "paper-lamp" }));
+    expect(r).toMatchObject({ status: 200, body: { title: "Paper Lamp", where: "github" } });
+    expect(gh.commitCount()).toBe(before + 1);
+    expect(gh.head().message).toBe("Delete gift: Paper Lamp\n\nDeleted from /admin.");
+    expect(gh.head().files.has("public/images/paper-lamp.webp")).toBe(false);
+    expect(gh.gifts().map((g: { slug: string }) => g.slug)).toEqual(["chess-set", "secret-thing"]);
   });
 
   it("never force-pushes", async () => {

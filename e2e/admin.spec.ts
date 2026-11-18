@@ -1,5 +1,5 @@
 // /admin in a real browser, against a fake /api/gift that behaves like the real one
-// (password check, list, add, edit, publish). Nothing touches the real gift list.
+// (password check, list, add, edit, publish, delete). Nothing touches the real gift list.
 import { test, expect, type Page, type Route } from "@playwright/test";
 import sharp from "sharp";
 
@@ -48,6 +48,12 @@ async function fakeApi(page: Page, opts: { gifts?: Gift[]; failNext?: { action: 
         const g = state.gifts.find((x) => x.slug === fields.slug)!;
         Object.assign(g, { title: fields.title, price: Number(fields.price), tags, link: fields.link, draft: fields.status === "draft" });
         return reply(200, { title: g.title, slug: g.slug, draft: g.draft, where: "github" });
+      }
+      case "delete": {
+        const g = state.gifts.find((x) => x.slug === fields.slug);
+        if (!g) return reply(400, { error: "That gift isn't in the list anymore" });
+        state.gifts = state.gifts.filter((x) => x.slug !== fields.slug);
+        return reply(200, { title: g.title, slug: g.slug, where: "github" });
       }
     }
     return reply(400, { error: "Unknown action" });
@@ -281,5 +287,67 @@ test.describe("edit", () => {
     await expect(page.locator("#gate")).toBeVisible();
     await expect(page.locator("#unlock .status")).toHaveText("Wrong password. Enter it again");
     await expect(rows(page)).toHaveCount(0);
+  });
+});
+
+test.describe("delete", () => {
+  const deletes = (api: { seen: Record<string, unknown>[] }) => api.seen.filter((s) => s.action === "delete");
+
+  test("only shows on an existing gift, never when adding", async ({ page }) => {
+    await fakeApi(page);
+    await unlock(page);
+    await page.getByRole("link", { name: "Add" }).click();
+    await expect(page.getByRole("button", { name: "Delete gift" })).toBeHidden();
+    await page.goto("/admin#edit/chess-set");
+    await expect(page.getByRole("button", { name: "Delete gift" })).toBeVisible();
+  });
+
+  test("asks first; Keep backs out without calling the server", async ({ page }) => {
+    const api = await fakeApi(page);
+    await unlock(page);
+    await rows(page).getByText("Chess Set").click();
+    await page.getByRole("button", { name: "Delete gift" }).click();
+    await expect(page.locator("#delete-question")).toHaveText("Delete Chess Set? It comes off the site.");
+    await expect(page.locator("#delete-no")).toBeFocused(); // the safe choice, Keep, has focus
+    await page.locator("#delete-no").click();
+    await expect(page.getByRole("button", { name: "Delete gift" })).toBeVisible();
+    await expect(page.locator("#delete-confirm")).toBeHidden();
+    expect(deletes(api)).toEqual([]);
+  });
+
+  test("Delete removes it and returns to the list", async ({ page }) => {
+    const api = await fakeApi(page);
+    await unlock(page);
+    await rows(page).getByText("Chess Set").click();
+    await page.getByRole("button", { name: "Delete gift" }).click();
+    await page.getByRole("button", { name: "Delete", exact: true }).click();
+    await expect(page.locator("#list-status")).toHaveText("Deleted Chess Set. Off the site in about a minute.");
+    await expect(page).not.toHaveURL(/#edit/);
+    await expect(rows(page)).toHaveCount(2);
+    await expect(rows(page).getByText("Chess Set")).toHaveCount(0);
+    expect(deletes(api)).toEqual([expect.objectContaining({ slug: "chess-set" })]);
+  });
+
+  test("a failed delete explains, keeps the gift, and lets them retry", async ({ page }) => {
+    const api = await fakeApi(page, { failNext: { action: "delete", status: 500, error: "GitHub said 502 on /git/trees" } });
+    await unlock(page);
+    await rows(page).getByText("Chess Set").click();
+    await page.getByRole("button", { name: "Delete gift" }).click();
+    await page.getByRole("button", { name: "Delete", exact: true }).click();
+    await expect(page.locator("#delete-status")).toHaveText("GitHub said 502 on /git/trees");
+    await expect(page).toHaveURL(/#edit\/chess-set$/);
+    await page.getByRole("button", { name: "Delete", exact: true }).click();
+    await expect(page.locator("#list-status")).toHaveText("Deleted Chess Set. Off the site in about a minute.");
+    expect(deletes(api)).toHaveLength(2);
+  });
+
+  test("a password changed mid-session locks the page instead of deleting", async ({ page }) => {
+    await fakeApi(page, { failNext: { action: "delete", status: 401, error: "Wrong password" } });
+    await unlock(page);
+    await rows(page).getByText("Chess Set").click();
+    await page.getByRole("button", { name: "Delete gift" }).click();
+    await page.getByRole("button", { name: "Delete", exact: true }).click();
+    await expect(page.locator("#gate")).toBeVisible();
+    await expect(page.locator("#unlock .status")).toHaveText("Wrong password. Enter it again");
   });
 });

@@ -54,10 +54,8 @@ describe("npm run gift", () => {
     expect(r.code, r.err).toBe(0);
   });
 
-  // Known bug: add-gift.mjs expands ~ before stripping quotes, so '~/x.png' isn't found.
-  // it.fails keeps CI green today and turns red once it's fixed, as a reminder to
-  // change this to a plain it().
-  it.fails("expands ~ inside a quoted path", () => {
+  // Was a known bug (it.fails): add-gift.mjs expanded ~ before stripping quotes.
+  it("expands ~ inside a quoted path", () => {
     const r = run(ADD, ["https://shop.example/moon", "--image", "'~/photo.png'", "--title", "Moon", "--price", "1", "--tags", "live"]);
     expect(r.code, r.err).toBe(0);
   });

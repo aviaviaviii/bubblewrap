@@ -56,7 +56,9 @@ const link = positionals[0] || (await ask("Shop link: "));
 const listed = gifts.find((g) => g.link === link.trim());
 if (listed) fail(`Already listed: ${listed.title}`);
 
-const image = (opt.image || (await ask("Image file: "))).replace(/^~(?=\/)/, process.env.HOME).replace(/^['"]|['"]$/g, "");
+// Quotes come off first (a path pasted as '~/Downloads/x.png'), then ~ becomes the home
+// folder. The other way round, a quoted ~ path was never expanded and wasn't found.
+const image = (opt.image || (await ask("Image file: "))).replace(/^['"]|['"]$/g, "").replace(/^~(?=\/)/, process.env.HOME);
 if (!existsSync(image)) fail(`No image at ${image}`);
 
 const title = opt.title || (await ask("Title: "));
