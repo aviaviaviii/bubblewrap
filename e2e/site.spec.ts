@@ -73,6 +73,22 @@ test.describe("home", () => {
     const [scroll, width] = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
     expect(scroll).toBeLessThanOrEqual(width);
   });
+
+  // Columns follow the width up to an 8-column cap (global.css `.grid`), so
+  // tablets and wide monitors fill the screen instead of stopping at 3 or 5.
+  const COLUMNS: [number, number][] = [
+    [820, 3], [1024, 4], [1180, 4], [1366, 5], [1512, 6], [1788, 7], [1920, 7], [2560, 8],
+  ];
+  for (const [width, cols] of COLUMNS) {
+    test(`shows ${cols} columns at ${width}px`, async ({ page, isMobile }) => {
+      test.skip(isMobile, "phone widths keep their own 3-column grid");
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto("/");
+      const tops = await page.locator("section.section").first().locator(".grid > li")
+        .evaluateAll((lis) => lis.map((li) => Math.round(li.getBoundingClientRect().top)));
+      expect(tops.filter((t) => t === tops[0])).toHaveLength(cols);
+    });
+  }
 });
 
 test.describe("tags", () => {
