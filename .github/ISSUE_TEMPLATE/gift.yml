@@ -1,0 +1,17 @@
+name: Gift suggestion
+description: Suggest a gift for the list
+labels: ["gift"]
+body:
+  - type: input
+    id: link
+    attributes:
+      label: Link
+      description: The shop's own product page
+      placeholder: https://
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it belongs
+      description: What makes it feel like art?
