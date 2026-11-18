@@ -30,6 +30,7 @@
 // can't remove a gift. No red: the words carry it. Git history keeps deleted gifts.
 // Left out on purpose (not asked for yet): bulk actions.
 import Head from "../components/Head.astro";
+import PostHog from "../components/posthog.astro";
 import { site } from "../site.config";
 ---
 
@@ -37,6 +38,7 @@ import { site } from "../site.config";
 <html lang="en">
   <head>
     <Head title="Admin · bubblewrap" />
+    <PostHog />
     <meta name="robots" content="noindex, nofollow" />
   </head>
   <body class="admin" data-nav-tags={JSON.stringify(site.navTags)}>
@@ -187,6 +189,8 @@ import { site } from "../site.config";
         el.dataset.ok = String(ok);
       };
       const problem = (e: unknown) => (e instanceof TypeError ? "Couldn't reach the site. Check your connection and try again" : (e as Error).message);
+      const capture = (event: string, properties?: Record<string, string | boolean>) =>
+        (window as Window & { posthog?: { capture: (name: string, details?: Record<string, string | boolean>) => void } }).posthog?.capture(event, properties);
 
       // Every request carries the password and an action; the server answers JSON.
       async function send(action: string, body = new FormData()) {
@@ -214,6 +218,7 @@ import { site } from "../site.config";
         const out = await send("list");
         gifts = out.gifts;
         try { sessionStorage.setItem(KEY, candidate); } catch {}
+        capture("admin_unlocked");
         gate.hidden = true;
         route();
       }
@@ -398,6 +403,7 @@ import { site } from "../site.config";
           const body = new FormData();
           body.set("slug", g.slug);
           await send("publish", body);
+          capture("gift_published");
           await refresh();
           say(listStatus, `Published ${g.title}. On the site in about a minute.`, true);
         } catch (err) {
@@ -503,6 +509,10 @@ import { site } from "../site.config";
           else body.delete("image");
           if (was) body.set("slug", was.slug);
           const out = await send(was ? "edit" : "add", body);
+          capture(was ? "gift_updated" : "gift_created", {
+            listing_status: out.draft ? "draft" : "live",
+            ...(was ? { image_changed: Boolean(out.imageChanged) } : {}),
+          });
           await refresh();
           const when = out.where === "github" ? " On the site in about a minute." : "";
           say(listStatus, `${was ? "Saved" : "Added"} ${out.title}${out.draft ? " as a draft" : ""}.${out.draft ? "" : when}`, true);
@@ -554,6 +564,7 @@ import { site } from "../site.config";
           const body = new FormData();
           body.set("slug", g.slug);
           const out = await send("delete", body);
+          capture("gift_deleted");
           await refresh();
           say(listStatus, `Deleted ${g.title}.${out.where === "github" ? " Off the site in about a minute." : ""}`, true);
           location.hash = "";

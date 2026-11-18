@@ -5,12 +5,14 @@
 // in light and dark, so theming them would only hurt contrast.
 // Measured on the live page: 20px bold text, 50px gap, 20px button padding.
 import Head from "../components/Head.astro";
+import PostHog from "../components/posthog.astro";
 ---
 
 <!doctype html>
 <html lang="en">
   <head>
     <Head />
+    <PostHog />
     <meta name="robots" content="noindex" />
   </head>
   <body class="success">

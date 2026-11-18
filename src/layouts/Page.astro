@@ -2,6 +2,7 @@
 import { site } from "../site.config";
 import Head from "../components/Head.astro";
 import HeaderDots from "../components/HeaderDots.astro";
+import PostHog from "../components/posthog.astro";
 
 interface Props {
   title?: string;
@@ -15,6 +16,7 @@ const marqueeItems = [...site.marquee, ...site.marquee];
 <html lang="en">
   <head>
     <Head title={title} />
+    <PostHog />
   </head>
   <body>
     <div class="marquee" aria-hidden="true">
@@ -94,6 +96,7 @@ const marqueeItems = [...site.marquee, ...site.marquee];
           button.textContent = "Sending";
           try {
             await fetch(form.action, { method: "POST", mode: "no-cors", body: new URLSearchParams(new FormData(form)) });
+            window.posthog?.capture("newsletter_subscribed");
             location.href = form.dataset.success;
           } catch {
             button.disabled = false;

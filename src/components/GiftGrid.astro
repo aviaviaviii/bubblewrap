@@ -17,7 +17,7 @@ const { heading, gifts, eager = false } = Astro.props;
         <li>
           {/* No title attribute: the hover panel shows the name, and the live Framer
               site has no native tooltip. Descriptions aren't shown anywhere on live either. */}
-          <a class="card" href={g.link} target="_blank" rel="noopener">
+          <a class="card" href={g.link} target="_blank" rel="noopener" data-section={heading}>
             <span class="card-image">
               {/* aria-hidden: the image alt already gives the name to screen readers. */}
               <span class="card-title" aria-hidden="true"><span>{g.title}</span></span>
@@ -37,3 +37,14 @@ const { heading, gifts, eager = false } = Astro.props;
     }
   </ul>
 </section>
+
+<script>
+  document.addEventListener("click", (event) => {
+    if (!(event.target instanceof Element)) return;
+    const card = event.target.closest<HTMLAnchorElement>(".card");
+    if (!card) return;
+    window.posthog?.capture("gift_link_clicked", {
+      listing_section: card.dataset.section ?? "unknown",
+    });
+  });
+</script>

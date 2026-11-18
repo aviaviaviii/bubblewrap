@@ -27,6 +27,7 @@
 import type { APIRoute } from "astro";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { makeGift, encodeGiftImage, today } from "../../lib/gift-core.mjs";
+import { logAdminOperation, warnAdminOperation } from "../../lib/posthog-logs";
 
 export const prerender = false;
 
@@ -65,6 +66,7 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   if (!passwordMatches(String(form.get("password") ?? ""), expected)) {
+    warnAdminOperation("admin_request_rejected");
     await new Promise((r) => setTimeout(r, 1000)); // slows down guessing
     return json(401, { error: "Wrong password" });
   }
@@ -76,24 +78,38 @@ export const POST: APIRoute = async ({ request }) => {
     return json(503, { error: (e as Error).message });
   }
 
+  const operation = String(form.get("action") ?? "add");
   try {
-    switch (String(form.get("action") ?? "add")) {
+    let result: object;
+    switch (operation) {
       case "list":
-        return json(200, { gifts: await listGifts(store) });
+        result = { gifts: await listGifts(store) };
+        break;
       case "publish":
-        return json(200, await publish(store, String(form.get("slug") ?? "")));
+        result = await publish(store, String(form.get("slug") ?? ""));
+        break;
       case "edit":
-        return json(200, await edit(store, String(form.get("slug") ?? ""), form));
+        result = await edit(store, String(form.get("slug") ?? ""), form);
+        break;
       case "delete":
-        return json(200, await remove(store, String(form.get("slug") ?? "")));
+        result = await remove(store, String(form.get("slug") ?? ""));
+        break;
       case "add":
-        return json(200, await add(store, form));
+        result = await add(store, form);
+        break;
       default:
         return json(400, { error: "Unknown action" });
     }
+    logAdminOperation("admin_operation_completed", { operation });
+    return json(200, result);
   } catch (e) {
+    const isGiftError = e instanceof GiftError;
+    warnAdminOperation("admin_operation_failed", {
+      operation,
+      failure_type: isGiftError ? "validation" : "server",
+    });
     const message = e instanceof Error ? e.message : String(e);
-    return json(e instanceof GiftError ? 400 : 500, { error: message });
+    return json(isGiftError ? 400 : 500, { error: message });
   }
 };
 
