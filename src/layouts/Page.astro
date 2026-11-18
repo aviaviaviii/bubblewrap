@@ -82,7 +82,7 @@ const marqueeItems = [...site.marquee, ...site.marquee];
           sync();
         });
 
-        // Newsletter: send in the background, then show /success (as live Framer did).
+        // Newsletter: send in the background, then show the /success page.
         // Apps Script doesn't allow reading the response cross-origin (no-cors), so a
         // request that reaches it counts as sent; only a network failure shows "Try again".
         const form = document.getElementById("subscribe");

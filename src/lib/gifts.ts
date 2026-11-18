@@ -5,7 +5,6 @@ export type Gift = {
   slug: string;
   title: string;
   image: string;
-  remoteImage: string;
   imageAlt: string;
   price: number;
   tags: string[];

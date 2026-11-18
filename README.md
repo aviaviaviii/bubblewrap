@@ -14,12 +14,12 @@ npm run build    # static output in dist/
 
 | What | Where |
 | --- | --- |
-| Gifts (the old Framer CMS) | `src/data/gifts.json` |
+| Gifts | `src/data/gifts.json` |
 | Site copy, nav tags, author link, newsletter | `src/site.config.ts` |
 | Layout (banner, header, footer, night mode) | `src/layouts/Page.astro` |
 | Product grid | `src/components/GiftGrid.astro` |
+| Gift images (800px webp, named by slug) | `public/images/` |
 | Styles | `src/styles/global.css` |
-| Original Framer CSV export | `data/framer-collection.csv` |
 
 ### Pages
 
@@ -32,36 +32,26 @@ Space Mono is self-hosted from `public/fonts/`, so the site makes no calls to Go
 
 ### Adding a gift
 
-Add an object to `src/data/gifts.json`:
-
-```json
-{
-  "slug": "my-new-thing",
-  "title": "My New Thing",
-  "image": "/images/my-new-thing.webp",
-  "imageAlt": "My New Thing",
-  "price": 2499,
-  "tags": ["live", "play"],
-  "date": "2026-11-18",
-  "link": "https://shop.example/products/my-new-thing",
-  "description": "",
-  "draft": false
-}
+```bash
+npm run gift -- https://shop.example/products/thing --image ~/Downloads/thing.png
 ```
 
-Put the image in `public/images/` (webp, about 800px wide). The `date` decides whether the gift shows under NEW.
+It asks for the title, price and tags, writes the image as `public/images/<slug>.webp` (800px wide), and adds the gift to the top of `src/data/gifts.json` dated today, which puts it under NEW. Check it with `npm run dev`, then commit and push.
 
-### Re-importing from Framer
+To skip the questions, pass everything as flags:
 
 ```bash
-npm run import:framer   # reads data/framer-collection.csv and rewrites src/data/gifts.json
+npm run gift -- <link> --image <file> --title "Thing" --price 2499 --tags live,play
 ```
 
-## Before switching the domain off Framer
+Optional flags: `--date 2026-11-18`, `--description "..."`, `--draft` (hidden until you set `"draft": false`). A new tag gets its own page; add it to `navTags` in `src/site.config.ts` to show it in the menu.
 
-1. **Images:** done for gifts. All 409 now load from `public/images/` as 800px webp, made from the PullPage asset export with `npm run images:import -- "<export folder>"`. Two other routes give the same result: `npm run images:local -- ~/Downloads` for loose files named by Framer image id or slug, and `npm run images:download` to fetch from Framer's CDN. All three write through `scripts/lib/gift-image.mjs`. The favicon and OG image are in `public/` too, so nothing loads from Framer anymore.
-2. **Newsletter:** signups go to a Google Sheet you own. Set up and wired in: the deployed script URL is the default in `src/site.config.ts`. Signups from the Framer form are in Formspark (form `gnbd4wE8`); export them as CSV and paste them into the sheet so nobody is lost.
-3. **Deploy:** works on any static host. On Vercel, import the repo; `vercel.json` already turns on clean URLs (`/live`, not `/live.html`).
+To edit a gift (price, tags, link), change its entry in `src/data/gifts.json`. To replace gift images, name the files after their slugs and run `npm run images:local -- <folder>`.
+
+## Before launch
+
+1. **Newsletter:** signups go to a Google Sheet you own (see below). Signups from the old site are in Formspark (form `gnbd4wE8`); export them as CSV and paste them into the sheet so nobody is lost.
+2. **Deploy:** works on any static host. On Vercel, import the repo; `vercel.json` already turns on clean URLs (`/live`, not `/live.html`).
 
 ## Newsletter
 
