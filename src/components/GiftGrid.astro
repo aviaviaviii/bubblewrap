@@ -1,20 +1,25 @@
 ---
-import { formatPrice, type Gift } from "../lib/gifts";
+import { formatPrice, newVisible, GRID_COLUMNS, type Gift } from "../lib/gifts";
 
 interface Props {
   heading: string;
   gifts: Gift[];
   eager?: boolean;
+  /** Show only full rows (NEW). Each card lists the column counts it hides at;
+      global.css turns that into display:none per grid width. */
+  fullRows?: boolean;
 }
-const { heading, gifts, eager = false } = Astro.props;
+const { heading, gifts, eager = false, fullRows = false } = Astro.props;
+const hideAt = (i: number) =>
+  fullRows ? GRID_COLUMNS.filter((n) => i >= newVisible(gifts.length, n)).join(" ") || undefined : undefined;
 ---
 
-<section class="section">
+<section class:list={["section", { "full-rows": fullRows }]}>
   <h2 class="section-heading">{heading}</h2>
   <ul class="grid">
     {
       gifts.map((g, i) => (
-        <li>
+        <li data-hide={hideAt(i)}>
           {/* No title attribute: the hover panel shows the name, and the live Framer
               site has no native tooltip. Descriptions aren't shown anywhere on live either. */}
           <a class="card" href={g.link} target="_blank" rel="noopener">

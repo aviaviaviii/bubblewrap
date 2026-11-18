@@ -5,7 +5,7 @@ import { describe, it, expect } from "vitest";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import data from "../../src/data/gifts.json";
-import { allTags, gifts } from "../../src/lib/gifts";
+import { allTags, gifts, sections } from "../../src/lib/gifts";
 import { site } from "../../src/site.config";
 
 const OUT = ".vercel/output/static";
@@ -60,7 +60,7 @@ describe.skipIf(!built)("built site", () => {
     expect(h).toContain(">NEW<");
     expect(h).toContain(">SORTED BY PRICE<");
     const cards = (h.match(/class="card"/g) ?? []).length;
-    expect(cards).toBe(Math.min(site.newCount, gifts.length) + gifts.length);
+    expect(cards).toBe(sections().newest.length + gifts.length);
   });
 
   it.each(allTags)("/%s shows only that tag's gifts", (tag) => {

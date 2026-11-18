@@ -4,7 +4,8 @@ import data from "../src/data/gifts.json" with { type: "json" };
 
 const live = data.filter((g) => !g.draft);
 const tags = [...new Set(live.flatMap((g) => g.tags))].sort();
-const NEW_COUNT = 12;
+// NEW renders 16 (enough for 8 columns) and CSS shows only full rows; see below.
+const NEW_COUNT = 16;
 const SCRIPT = /script\.google\.com/;
 // The one outside service the public pages may call: PostHog analytics, chosen on
 // purpose (see Head.astro). Its events go to us.i.posthog.com and its script comes
@@ -72,6 +73,30 @@ test.describe("home", () => {
     await page.goto("/");
     const [scroll, width] = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
     expect(scroll).toBeLessThanOrEqual(width);
+  });
+
+  // Columns follow the width up to an 8-column cap (global.css `.grid`), so
+  // tablets and wide monitors fill the screen instead of stopping at 3 or 5.
+  // NEW then shows only full rows: the fewest that reach 9 gifts.
+  const COLUMNS: [number, number, number][] = [
+    [820, 3, 9], [1024, 4, 12], [1180, 4, 12], [1366, 5, 10], [1512, 6, 12], [1788, 7, 14], [1920, 7, 14], [2560, 8, 16],
+  ];
+  for (const [width, cols, shown] of COLUMNS) {
+    test(`shows ${cols} columns and ${shown} NEW gifts in full rows at ${width}px`, async ({ page, isMobile }) => {
+      test.skip(isMobile, "phone widths keep their own 3-column grid");
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto("/");
+      const tops = await page.locator("section.section").first().locator(".grid > li")
+        .evaluateAll((lis) => lis.filter((li) => li.getClientRects().length).map((li) => Math.round(li.getBoundingClientRect().top)));
+      expect(tops.filter((t) => t === tops[0])).toHaveLength(cols);
+      expect(tops).toHaveLength(shown);
+    });
+  }
+
+  test("NEW shows 9 gifts in 3 full rows on a phone", async ({ page, isMobile }) => {
+    test.skip(!isMobile, "phone only");
+    await page.goto("/");
+    await expect(page.locator("section.section").first().locator(".grid > li:visible")).toHaveCount(9);
   });
 });
 
