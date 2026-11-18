@@ -6,6 +6,12 @@ const live = data.filter((g) => !g.draft);
 const tags = [...new Set(live.flatMap((g) => g.tags))].sort();
 const NEW_COUNT = 12;
 const SCRIPT = /script\.google\.com/;
+// The one outside service the public pages may call: PostHog analytics, chosen on
+// purpose (see Head.astro). Its events go to us.i.posthog.com and its script comes
+// from us-assets.i.posthog.com (site.config.ts `posthog.host`); anything else outside
+// still fails the check below. Written out here because site.config.ts reads
+// import.meta.env, which Playwright's Node runner doesn't provide.
+const ANALYTICS = /(^|\.)i\.posthog\.com$/;
 
 test.describe("home", () => {
   test("shows NEW and SORTED BY PRICE with every live gift", async ({ page }) => {
@@ -54,7 +60,7 @@ test.describe("home", () => {
     page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
     page.on("request", (r) => {
       const u = new URL(r.url());
-      if (u.hostname !== "localhost" && !u.protocol.startsWith("data")) outside.push(r.url());
+      if (u.hostname !== "localhost" && !u.protocol.startsWith("data") && !ANALYTICS.test(u.hostname)) outside.push(r.url());
     });
     await page.goto("/");
     await page.waitForLoadState("networkidle");
