@@ -1,19 +1,5 @@
 [
   {
-    "slug": "test123",
-    "title": "test123",
-    "image": "/images/test123.webp",
-    "imageAlt": "test123",
-    "price": 10000,
-    "tags": [
-      "live"
-    ],
-    "date": "2026-11-18",
-    "link": "https://aviaviaviii.substack.com/",
-    "description": "",
-    "draft": true
-  },
-  {
     "slug": "stendig-calendar-2027",
     "title": "Stendig Calendar 2027",
     "image": "/images/stendig-calendar-2027.webp",
