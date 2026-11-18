@@ -1,0 +1,148 @@
+# Every push and pull request runs the full suite. Vercel still deploys on its own;
+# this is the gate that says whether what's on main is sound.
+#
+#   types     astro check over pages, API, tests
+#   test      unit, data integrity, API, security, newsletter script, CLI scenarios (coverage floor)
+#   build     astro build, then checks over the files that actually ship
+#   e2e       Playwright against that build: desktop Chrome, Android Chrome, iPhone Safari
+#   security  npm audit, secret scan over full history, dependency review on PRs
+#
+# Weekly run on Mondays so a new advisory against a dependency shows up even when
+# nothing was pushed.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 4 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Vercel's runtime for the /admin function.
+  NODE_VERSION: 24
+
+jobs:
+  types:
+    name: Types
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: "${{ env.NODE_VERSION }}", cache: npm }
+      - run: npm ci
+      - run: npm run check
+
+  test:
+    name: Unit, API, security, scenarios
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: "${{ env.NODE_VERSION }}", cache: npm }
+      - run: npm ci
+      - run: npm run test:coverage
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 14
+
+  build:
+    name: Build and check output
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: "${{ env.NODE_VERSION }}", cache: npm }
+      - run: npm ci
+      - run: npm run build
+      - run: npm run test:build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: .vercel/output/static
+          include-hidden-files: true
+          retention-days: 3
+
+  e2e:
+    name: Browser (${{ matrix.project }})
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [desktop-chrome, phone-chrome, phone-safari]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: "${{ env.NODE_VERSION }}", cache: npm }
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: site
+          path: .vercel/output/static
+      - name: Install browser
+        run: npx playwright install --with-deps ${{ matrix.project == 'phone-safari' && 'webkit' || 'chromium' }}
+      - run: npx playwright test --project=${{ matrix.project }}
+        env:
+          E2E_SKIP_BUILD: "1"
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-${{ matrix.project }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+
+  security:
+    name: Security
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # the secret scan reads every commit, not just the last one
+      - uses: actions/setup-node@v5
+        with: { node-version: "${{ env.NODE_VERSION }}", cache: npm }
+
+      # Critical advisories in what ships fail the build. High ones are reported as a
+      # warning: today they're all inside Astro's and Vercel's build tooling (picomatch,
+      # path-to-regexp), and the only "fix" npm offers is downgrading Astro.
+      - name: Audit runtime dependencies (fails on critical)
+        run: npm audit --omit=dev --audit-level=critical
+      - name: Audit all dependencies (report only)
+        run: |
+          if ! npm audit --audit-level=high > audit.txt 2>&1; then
+            echo "::warning title=npm audit::High-severity advisories found. See the job log."
+          fi
+          cat audit.txt
+
+      - name: Scan for committed secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Review new dependencies
+        if: github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: critical
+          comment-summary-in-pr: on-failure

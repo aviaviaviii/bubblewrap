@@ -9,11 +9,26 @@
     "build": "astro build",
     "preview": "astro preview",
     "gift": "node scripts/add-gift.mjs",
-    "images:local": "node scripts/use-local-images.mjs"
+    "images:local": "node scripts/use-local-images.mjs",
+    "check": "astro check",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:build": "REQUIRE_BUILD=1 vitest run tests/build",
+    "test:e2e": "playwright test",
+    "test:all": "npm run check && npm run test:coverage && npm run build && npm run test:build && E2E_SKIP_BUILD=1 npm run test:e2e"
   },
   "dependencies": {
     "@astrojs/vercel": "11.0.22",
     "astro": "7.4.12",
     "sharp": "0.35.5"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.12",
+    "@playwright/test": "1.65.1",
+    "@types/node": "24.19.2",
+    "@vitest/coverage-v8": "5.1.0",
+    "typescript": "6.0.3",
+    "vitest": "5.1.0"
   }
 }

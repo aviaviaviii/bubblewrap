@@ -10,6 +10,25 @@ npm run dev      # http://localhost:4321
 npm run build    # static output in dist/
 ```
 
+## Tests
+
+```bash
+npm test             # unit, data, API, security, newsletter script, CLI scenarios
+npm run test:e2e     # builds, then Playwright on desktop Chrome, Android Chrome, iPhone Safari
+npm run test:all     # everything CI runs: types, coverage, build checks, browsers
+```
+
+| Folder | What it covers |
+| --- | --- |
+| `tests/unit` | `gift-core` rules, page sections and prices, `gifts.json` integrity (every image exists, no duplicate links or slugs) |
+| `tests/api` | `/api/gift`: password gate, list, add, edit, publish, local and GitHub stores, push conflicts |
+| `tests/security` | committed secrets, XSS sinks, `/admin` leaks, `noopener`, third-party requests, the newsletter Apps Script |
+| `tests/scenario` | `npm run gift` and `npm run images:local` run for real; a gift's full life in `/admin` |
+| `tests/build` | the built files: every page and image resolves, no drafts or secrets ship |
+| `e2e/` | the site and `/admin` in real browsers; `/api/gift` is mocked, so the gift list is never touched |
+
+CI (`.github/workflows/ci.yml`) runs all of it on every push and pull request, plus `npm audit` and a secret scan, and again every Monday.
+
 ## Where things live
 
 | What | Where |

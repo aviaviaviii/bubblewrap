@@ -6,3 +6,8 @@ dist/
 # Raw files (original image exports, notes). Large and personal, never committed.
 xx_raw/
 .vercel/
+
+# Test output
+coverage/
+test-results/
+playwright-report/

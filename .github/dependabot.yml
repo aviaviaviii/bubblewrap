@@ -1,0 +1,19 @@
+# Weekly update PRs, grouped so it's one PR per ecosystem, not one per package.
+# CI runs on each, so a green PR is safe to merge.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule: { interval: weekly, day: monday }
+    open-pull-requests-limit: 5
+    groups:
+      astro:
+        patterns: ["astro", "@astrojs/*"]
+      test-tools:
+        patterns: ["vitest", "@vitest/*", "@playwright/test", "typescript", "@types/*"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly, day: monday }
+    groups:
+      actions:
+        patterns: ["*"]
