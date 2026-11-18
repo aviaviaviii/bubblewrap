@@ -1,0 +1,35 @@
+---
+import { formatPrice, type Gift } from "../lib/gifts";
+
+interface Props {
+  heading: string;
+  gifts: Gift[];
+  eager?: boolean;
+}
+const { heading, gifts, eager = false } = Astro.props;
+---
+
+<section class="section">
+  <h2 class="section-heading">{heading}</h2>
+  <ul class="grid">
+    {
+      gifts.map((g, i) => (
+        <li>
+          <a class="card" href={g.link} target="_blank" rel="noopener" title={g.description || g.title}>
+            <span class="card-image">
+              <img
+                src={g.image}
+                alt={g.imageAlt}
+                loading={eager && i < 10 ? "eager" : "lazy"}
+                decoding="async"
+                width="220"
+                height="240"
+              />
+            </span>
+            <span class="card-price">{formatPrice(g.price)}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</section>

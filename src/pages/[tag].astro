@@ -1,0 +1,18 @@
+---
+import Page from "../layouts/Page.astro";
+import GiftGrid from "../components/GiftGrid.astro";
+import { allTags, sections } from "../lib/gifts";
+import { site } from "../site.config";
+
+export function getStaticPaths() {
+  return allTags.map((tag) => ({ params: { tag } }));
+}
+
+const { tag } = Astro.params;
+const { newest, byPrice } = sections(tag);
+---
+
+<Page title={`${tag} · ${site.title}`} activeTag={tag}>
+  <GiftGrid heading="NEW" gifts={newest} eager />
+  <GiftGrid heading="SORTED BY PRICE" gifts={byPrice} />
+</Page>

@@ -1,0 +1,115 @@
+---
+import { site } from "../site.config";
+import "../styles/global.css";
+
+interface Props {
+  title?: string;
+  activeTag?: string;
+}
+const { title = site.title, activeTag } = Astro.props;
+const canonical = new URL(Astro.url.pathname, site.url).href;
+const ogImage = new URL(site.ogImage, site.url).href;
+const marqueeItems = [...site.marquee, ...site.marquee];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={site.description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href={site.favicon} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={site.description} />
+    <meta property="og:image" content={ogImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={site.description} />
+    <meta name="twitter:image" content={ogImage} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <script is:inline>
+      try {
+        const t = localStorage.getItem("theme");
+        if (t) document.documentElement.dataset.theme = t;
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee-track">
+        {marqueeItems.map((m) => <span>{m}<span class="flag">🇮🇳</span></span>)}
+      </div>
+    </div>
+    <p class="intro">{site.intro}</p>
+
+    <header class="header">
+      <nav class="nav">
+        <ul class="nav-tags">
+          <li><a href="/" aria-current={!activeTag ? "page" : undefined}>ALL</a></li>
+          {
+            site.navTags.map((t) => (
+              <li>
+                <a href={`/${t}`} aria-current={activeTag === t ? "page" : undefined}>
+                  {t.toUpperCase()}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+        <ul class="nav-right">
+          <li><button type="button" class="theme-toggle" id="theme-toggle">NIGHT</button></li>
+          <li><a href={site.author.href} target="_blank" rel="noopener">{site.author.label}<span class="arrow"> ↗</span></a></li>
+        </ul>
+      </nav>
+      <h1 class="logo">
+        <a href="/"><span class="logo-full">bubble—wrap</span><span class="logo-short">b-w</span></a>
+      </h1>
+    </header>
+
+    <main>
+      <slot />
+    </main>
+
+    <footer class="footer">
+      <p class="footer-label">• {site.newsletter.label}</p>
+      <form class="subscribe" method="POST" action={site.newsletter.action || undefined} id="subscribe">
+        <input type="email" name="email" placeholder="name@email.com" required autocomplete="email" aria-label="Email" />
+        <button type="submit">Subscribe</button>
+      </form>
+    </footer>
+
+    <script is:inline>
+      (() => {
+        const root = document.documentElement;
+        const btn = document.getElementById("theme-toggle");
+        const isDark = () =>
+          root.dataset.theme
+            ? root.dataset.theme === "dark"
+            : matchMedia("(prefers-color-scheme: dark)").matches;
+        const sync = () => (btn.textContent = isDark() ? "DAY" : "NIGHT");
+        sync();
+        btn.addEventListener("click", () => {
+          root.dataset.theme = isDark() ? "light" : "dark";
+          try { localStorage.setItem("theme", root.dataset.theme); } catch (e) {}
+          sync();
+        });
+        const form = document.getElementById("subscribe");
+        if (!form.getAttribute("action")) {
+          form.addEventListener("submit", (e) => {
+            e.preventDefault();
+            form.querySelector("button").textContent = "Soon!";
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>
