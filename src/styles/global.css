@@ -239,6 +239,9 @@ ul { list-style: none; margin: 0; padding: 0; }
   color: #fff;
   cursor: pointer;
 }
+.subscribe button:disabled { cursor: progress; }
+/* Honeypot: off-screen rather than display:none, which some bots skip. */
+.subscribe .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 
 /* ---------- tablet ---------- */
 @media (max-width: 1199.98px) {

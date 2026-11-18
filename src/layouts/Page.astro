@@ -55,8 +55,13 @@ const marqueeItems = [...site.marquee, ...site.marquee];
 
     <footer class="footer">
       <p class="footer-label">• {site.newsletter.label}</p>
-      <form class="subscribe" method="GET" action={site.newsletter.action} target="_blank" id="subscribe">
+      {/* Posts to the Google Sheet's Apps Script (newsletter/apps-script.gs).
+          "website" is a honeypot: hidden from people, so only bots fill it.
+          "page" records where the signup happened. */}
+      <form class="subscribe" method="POST" action={site.newsletter.action || undefined} data-success={site.newsletter.success} id="subscribe">
         <input type="email" name="email" placeholder="name@email.com" required autocomplete="email" aria-label="Email" />
+        <input type="hidden" name="page" value={Astro.url.pathname} />
+        <span class="hp" aria-hidden="true"><input type="text" name="website" tabindex="-1" autocomplete="off" /></span>
         <button type="submit">Subscribe</button>
       </form>
     </footer>
@@ -75,6 +80,25 @@ const marqueeItems = [...site.marquee, ...site.marquee];
           root.dataset.theme = isDark() ? "light" : "dark";
           try { localStorage.setItem("theme", root.dataset.theme); } catch (e) {}
           sync();
+        });
+
+        // Newsletter: send in the background, then show /success (as live Framer did).
+        // Apps Script doesn't allow reading the response cross-origin (no-cors), so a
+        // request that reaches it counts as sent; only a network failure shows "Try again".
+        const form = document.getElementById("subscribe");
+        const button = form.querySelector("button");
+        form.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          if (!form.getAttribute("action")) { button.textContent = "Soon!"; return; }
+          button.disabled = true;
+          button.textContent = "Sending";
+          try {
+            await fetch(form.action, { method: "POST", mode: "no-cors", body: new URLSearchParams(new FormData(form)) });
+            location.href = form.dataset.success;
+          } catch {
+            button.disabled = false;
+            button.textContent = "Try again";
+          }
         });
       })();
     </script>

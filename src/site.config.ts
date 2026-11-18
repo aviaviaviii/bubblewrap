@@ -24,13 +24,17 @@ export const site = {
   intro:
     "This site is a collection of links — to gifts that feel like art, ones you'll be tempted to keep and that warms the heart <3",
 
-  // Newsletter: the footer form opens Substack's subscribe page in a new tab with
-  // the email already filled in (?email=), and the reader confirms there.
-  // Substack has no public endpoint a custom form can POST to; its own form uses
-  // an undocumented API, and its embed is a white box that can't be styled to match.
-  // Live Framer posted to Formspark and landed on /success, which is now unused.
+  // Newsletter: signups go to a Google Sheet we own, through the Apps Script in
+  // newsletter/apps-script.gs (setup in the README). The default is that script's
+  // deployed web app URL; it's public (it ships in the page HTML), so it lives here
+  // rather than in host settings. PUBLIC_NEWSLETTER_ACTION overrides it, e.g. to
+  // test against another sheet. Replaced Substack, which made readers confirm on
+  // Substack's own page.
   newsletter: {
     label: "once a month, just the new stuff *",
-    action: "https://bubblewrapindia.substack.com/subscribe",
+    action:
+      import.meta.env.PUBLIC_NEWSLETTER_ACTION ??
+      "https://script.google.com/macros/s/AKfycbxML_05QzArvYBM8fO7iCBvK6fYmXIFmp0VDk2SnCw46ZxcSIJnDTKjScds1ros0mrUpw/exec",
+    success: "/success",
   },
 };
