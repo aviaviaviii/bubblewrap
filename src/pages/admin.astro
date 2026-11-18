@@ -1,13 +1,19 @@
 ---
-// /admin: add a gift from any browser, phone included. One column, every field
-// visible at once, nothing hidden behind steps. The password is checked by the
-// server (src/pages/api/gift.ts) on every save; this page itself holds nothing
-// secret, so it's a static page with noindex.
-// Same five things `npm run gift` asks for (title, image, price, tags, link), plus
-// a draft box. Fields keep the browser's own labels-above-inputs pattern and the
-// site's Space Mono; no new components.
-// Tags are tick boxes of the ones in use (menu tags first) plus a field for a new
-// one, so a typo can't quietly create a new page.
+// /admin: add gifts and publish drafts from any browser, phone included.
+// One column, every field visible at once, nothing hidden behind steps.
+//
+// The password sits at the top because both jobs need it; it's sent with every
+// request and checked by the server (src/pages/api/gift.ts). This page holds nothing
+// secret, so it's static with noindex. The drafts list is NOT built into it: /admin is
+// public on the custom domain, so drafts load from the server only after the password
+// checks out.
+//
+// Same five things `npm run gift` asks for (title, image, price, tags, link), plus a
+// draft box. Labels above inputs and the site's Space Mono; no new components.
+// Tags are tick boxes of the ones in use (menu tags first) plus a field for a new one,
+// so a typo can't quietly create a new page.
+// Show/Hide on the password: typing a long password blind on a phone is where the
+// "Wrong password" mix-ups came from.
 import Head from "../components/Head.astro";
 import data from "../data/gifts.json";
 import { site } from "../site.config";
@@ -19,47 +25,94 @@ const tags = [...site.navTags, ...inUse.filter((t) => !site.navTags.includes(t))
 <!doctype html>
 <html lang="en">
   <head>
-    <Head title="Add a gift · bubblewrap" />
+    <Head title="Admin · bubblewrap" />
     <meta name="robots" content="noindex, nofollow" />
   </head>
   <body class="admin">
     <main>
-      <h1>Add a gift</h1>
-      <form id="gift" novalidate>
-        <label>Title<input name="title" required autocomplete="off" /></label>
+      <label class="password">Password
+        <span class="password-row">
+          <input id="password" type="password" autocomplete="current-password" />
+          <button type="button" class="reveal" aria-pressed="false" aria-controls="password">Show</button>
+        </span>
+      </label>
 
-        <label>Image
-          <input name="image" type="file" accept="image/*" required />
-        </label>
-        <img class="preview" alt="" hidden />
+      <section>
+        <h1>Add a gift</h1>
+        <form id="gift" novalidate>
+          <label>Title<input name="title" required autocomplete="off" /></label>
 
-        <label>Price in ₹<input name="price" inputmode="numeric" required autocomplete="off" placeholder="2499" /></label>
+          <label>Image
+            <input name="image" type="file" accept="image/*" required />
+          </label>
+          <img class="preview" alt="" hidden />
 
-        <fieldset>
-          <legend>Tags</legend>
-          <div class="tags">
-            {tags.map((t) => <label class="tag"><input type="checkbox" name="tags" value={t} />{t}</label>)}
-          </div>
-          <label class="new-tag">New tag<input name="tags" autocomplete="off" placeholder="optional" /></label>
-        </fieldset>
+          <label>Price in ₹<input name="price" inputmode="numeric" required autocomplete="off" placeholder="2499" /></label>
 
-        <label>Link<input name="link" type="url" inputmode="url" required autocomplete="off" placeholder="https://" /></label>
+          <fieldset>
+            <legend>Tags</legend>
+            <div class="tags">
+              {tags.map((t) => <label class="tag"><input type="checkbox" name="tags" value={t} />{t}</label>)}
+            </div>
+            <label class="new-tag">New tag<input name="tags" autocomplete="off" placeholder="optional" /></label>
+          </fieldset>
 
-        <label class="check"><input name="draft" type="checkbox" />Draft, hidden from the site</label>
+          <label>Link<input name="link" type="url" inputmode="url" required autocomplete="off" placeholder="https://" /></label>
 
-        <label>Password<input name="password" type="password" required autocomplete="current-password" /></label>
+          <label class="check"><input name="draft" type="checkbox" />Draft, hidden from the site</label>
 
-        <button type="submit">Add gift</button>
-        <p class="status" role="status" aria-live="polite"></p>
-      </form>
+          <button type="submit" class="primary">Add gift</button>
+          <p class="status" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section class="drafts">
+        <h2>Drafts</h2>
+        <button type="button" class="secondary" id="load-drafts">Show drafts</button>
+        <p class="status" id="drafts-status" role="status" aria-live="polite"></p>
+        <ul id="draft-list"></ul>
+      </section>
     </main>
 
     <script>
-      const form = document.getElementById("gift") as HTMLFormElement;
+      const $ = <T extends Element>(sel: string, root: ParentNode = document) => root.querySelector(sel) as T;
+      const password = $<HTMLInputElement>("#password");
+      const reveal = $<HTMLButtonElement>(".reveal");
+      const form = $<HTMLFormElement>("#gift");
       const fileInput = form.elements.namedItem("image") as HTMLInputElement;
-      const preview = form.querySelector(".preview") as HTMLImageElement;
-      const status = form.querySelector(".status") as HTMLElement;
-      const button = form.querySelector("button") as HTMLButtonElement;
+      const preview = $<HTMLImageElement>(".preview", form);
+      const status = $<HTMLElement>(".status", form);
+      const addButton = $<HTMLButtonElement>("button[type=submit]", form);
+      const loadDrafts = $<HTMLButtonElement>("#load-drafts");
+      const draftsStatus = $<HTMLElement>("#drafts-status");
+      const draftList = $<HTMLUListElement>("#draft-list");
+
+      reveal.addEventListener("click", () => {
+        const showing = password.type === "text";
+        password.type = showing ? "password" : "text";
+        reveal.textContent = showing ? "Show" : "Hide";
+        reveal.setAttribute("aria-pressed", String(!showing));
+        password.focus();
+      });
+
+      const say = (el: HTMLElement, text: string, ok = false) => {
+        el.textContent = text;
+        el.dataset.ok = String(ok);
+      };
+
+      // Every request carries the password and an action; the server answers JSON.
+      async function send(action: string, body = new FormData()) {
+        body.set("action", action);
+        body.set("password", password.value);
+        const res = await fetch("/api/gift", { method: "POST", body });
+        const out = await res.json().catch(() => ({ error: "Something went wrong. Try again" }));
+        if (!res.ok) throw new Error(out.error);
+        return out;
+      }
+      const offline = (e: unknown) => (e instanceof TypeError ? "Couldn't reach the site. Check your connection and try again" : (e as Error).message);
+      const inr = new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 });
+
+      // ---------- add ----------
 
       fileInput.addEventListener("change", () => {
         const f = fileInput.files?.[0];
@@ -84,52 +137,107 @@ const tags = [...site.navTags, ...inUse.filter((t) => !site.navTags.includes(t))
         return webp?.type === "image/webp" ? webp : (await as("image/jpeg"))!;
       }
 
-      const say = (text: string, ok = false) => {
-        status.textContent = text;
-        status.dataset.ok = String(ok);
-      };
-
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
         const f = fileInput.files?.[0];
+        const field = (n: string) => (form.elements.namedItem(n) as HTMLInputElement).value.trim();
         const missing = [
-          !(form.elements.namedItem("title") as HTMLInputElement).value.trim() && "a title",
+          !password.value && "the password",
+          !field("title") && "a title",
           !f && "an image",
-          !(form.elements.namedItem("price") as HTMLInputElement).value.trim() && "a price",
+          !field("price") && "a price",
           !new FormData(form).getAll("tags").some((t) => String(t).trim()) && "a tag",
-          !(form.elements.namedItem("link") as HTMLInputElement).value.trim() && "a link",
-          !(form.elements.namedItem("password") as HTMLInputElement).value && "the password",
+          !field("link") && "a link",
         ].filter(Boolean);
-        if (missing.length) return say(`Still needs ${missing.join(", ")}`);
+        if (missing.length) return say(status, `Still needs ${missing.join(", ")}`);
 
-        button.disabled = true;
-        button.textContent = "Adding";
-        say("");
+        addButton.disabled = true;
+        addButton.textContent = "Adding";
+        say(status, "");
         try {
           const body = new FormData(form);
           body.set("image", await shrink(f!), f!.name);
-          const res = await fetch("/api/gift", { method: "POST", body });
-          const out = await res.json().catch(() => ({ error: "Something went wrong. Try again" }));
-          if (!res.ok) return say(out.error);
-
-          const where = out.where === "github" ? "It'll be on the site in about a minute." : "Saved to your local files.";
-          say(`Added ${out.title}${out.draft ? " as a draft" : ""}. ${out.draft ? "" : where}`.trim(), true);
-          const keep = (form.elements.namedItem("password") as HTMLInputElement).value;
+          const out = await send("add", body);
+          const when = out.where === "github" ? "It'll be on the site in about a minute." : "Saved to your local files.";
+          say(status, out.draft ? `Added ${out.title} as a draft.` : `Added ${out.title}. ${when}`, true);
           form.reset();
-          (form.elements.namedItem("password") as HTMLInputElement).value = keep;
           preview.hidden = true;
-        } catch {
-          say("Couldn't reach the site. Check your connection and try again");
+          if (out.draft && draftList.dataset.loaded) showDrafts();
+        } catch (err) {
+          say(status, offline(err));
         } finally {
-          button.disabled = false;
-          button.textContent = "Add gift";
+          addButton.disabled = false;
+          addButton.textContent = "Add gift";
         }
       });
+
+      // ---------- drafts ----------
+
+      async function showDrafts() {
+        if (!password.value) return say(draftsStatus, "Still needs the password");
+        loadDrafts.disabled = true;
+        say(draftsStatus, "");
+        try {
+          const { drafts } = await send("drafts");
+          draftList.replaceChildren(...drafts.map(row));
+          draftList.dataset.loaded = "true";
+          loadDrafts.textContent = "Refresh";
+          if (!drafts.length) say(draftsStatus, "No drafts");
+        } catch (err) {
+          say(draftsStatus, offline(err));
+        } finally {
+          loadDrafts.disabled = false;
+        }
+      }
+      loadDrafts.addEventListener("click", showDrafts);
+
+      type Draft = { slug: string; title: string; image: string; price: number; tags: string[] };
+      function row(d: Draft) {
+        const li = document.createElement("li");
+        const img = document.createElement("img");
+        img.src = d.image;
+        img.alt = "";
+        img.loading = "lazy";
+        // A draft added minutes ago has no image on the site until the rebuild finishes.
+        img.onerror = () => img.classList.add("missing");
+        const text = document.createElement("div");
+        const title = document.createElement("p");
+        title.className = "draft-title";
+        title.textContent = d.title;
+        const meta = document.createElement("p");
+        meta.className = "draft-meta";
+        meta.textContent = `₹${inr.format(d.price)} · ${d.tags.join(", ")}`;
+        text.append(title, meta);
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "secondary";
+        btn.textContent = "Publish";
+        btn.addEventListener("click", async () => {
+          btn.disabled = true;
+          btn.textContent = "Publishing";
+          try {
+            const body = new FormData();
+            body.set("slug", d.slug);
+            const out = await send("publish", body);
+            meta.textContent = out.where === "github" ? "Published · on the site in about a minute" : "Published to your local files";
+            btn.remove();
+          } catch (err) {
+            meta.textContent = offline(err);
+            btn.disabled = false;
+            btn.textContent = "Publish";
+          }
+        });
+        li.append(img, text, btn);
+        return li;
+      }
     </script>
 
-    <style>
-      .admin main { max-width: 420px; margin: 0 auto; padding: 40px 16px 64px; }
-      h1 { font-size: 20px; margin: 0 0 28px; }
+    <!-- is:global because the draft rows are built by the script above, and Astro's
+         scoped styles only reach elements written in this template. This page has its
+         own stylesheet, so nothing leaks to the site. -->
+    <style is:global>
+      .admin main { max-width: 420px; margin: 0 auto; padding: 40px 16px 64px; display: flex; flex-direction: column; gap: 40px; }
+      h1, h2 { font-size: 20px; margin: 0 0 20px; }
       form { display: flex; flex-direction: column; gap: 20px; }
       label { display: flex; flex-direction: column; gap: 6px; }
       input:not([type="checkbox"]):not([type="file"]) {
@@ -140,8 +248,22 @@ const tags = [...site.navTags, ...inUse.filter((t) => !site.navTags.includes(t))
         border-radius: 0;
         background: var(--input-bg);
         color: var(--input-fg);
+        min-width: 0;
       }
-      input:focus-visible { outline: 2px solid var(--fg); outline-offset: 1px; }
+      input:focus-visible, button:focus-visible { outline: 2px solid var(--fg); outline-offset: 1px; }
+      .password-row { display: flex; }
+      .password-row input { flex: 1; }
+      .reveal {
+        font: inherit;
+        font-size: 14px;
+        padding: 0 14px;
+        border: 1px solid color-mix(in srgb, var(--fg) 25%, transparent);
+        border-left: 0;
+        border-radius: 0;
+        background: var(--input-bg);
+        color: var(--muted);
+        cursor: pointer;
+      }
       input[type="file"] { font: inherit; font-size: 14px; }
       .preview { width: 110px; height: 120px; object-fit: contain; }
       fieldset { border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
@@ -149,20 +271,43 @@ const tags = [...site.navTags, ...inUse.filter((t) => !site.navTags.includes(t))
       .tags { display: flex; flex-wrap: wrap; gap: 8px 16px; }
       .tag, .check { flex-direction: row; align-items: center; gap: 6px; font-size: 14px; }
       .tag input, .check input { width: 18px; height: 18px; margin: 0; accent-color: var(--fg); }
-      button {
-        font: inherit;
+      button.primary, button.secondary { font: inherit; border-radius: 0; cursor: pointer; }
+      button.primary {
         font-size: 16px;
         font-weight: 700;
         padding: 15px 18px;
         border: 0;
-        border-radius: 0;
         background: var(--button-bg);
         color: #fff;
-        cursor: pointer;
+      }
+      button.secondary {
+        font-size: 14px;
+        padding: 10px 14px;
+        border: 1px solid color-mix(in srgb, var(--fg) 25%, transparent);
+        background: transparent;
+        color: var(--fg);
+        align-self: flex-start;
       }
       button:disabled { cursor: progress; opacity: 0.7; }
       .status { margin: 0; min-height: 1.4em; font-size: 14px; color: var(--muted); }
       .status[data-ok="true"] { color: var(--fg); }
+      .drafts .status { margin-top: 12px; }
+      #draft-list { display: flex; flex-direction: column; }
+      #draft-list li {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 0;
+        border-top: 1px solid color-mix(in srgb, var(--fg) 15%, transparent);
+      }
+      #draft-list li:first-child { margin-top: 12px; }
+      #draft-list img { width: 48px; height: 52px; object-fit: contain; flex: none; }
+      #draft-list img.missing { visibility: hidden; }
+      #draft-list div { flex: 1; min-width: 0; }
+      #draft-list p { margin: 0; }
+      .draft-title { font-size: 14px; overflow-wrap: break-word; }
+      .draft-meta { font-size: 12px; color: var(--muted); margin-top: 4px !important; }
+      #draft-list button { flex: none; align-self: center; }
     </style>
   </body>
 </html>
