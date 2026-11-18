@@ -130,24 +130,49 @@ test.describe("tags", () => {
 });
 
 test.describe("night mode", () => {
-  test("toggles and is remembered across pages", async ({ page }) => {
-    await page.emulateMedia({ colorScheme: "light" });
+  // The theme follows the visitor's local clock (day 7:00 to 19:00); a tap holds until
+  // the next switch. Dates have no offset, so they read as the browser's local time.
+  test("is day in the daytime and night at night", async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-11-18T10:00:00"));
+    await page.goto("/");
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+    await expect(page.locator("#theme-toggle")).toHaveText("NIGHT");
+
+    await page.clock.setFixedTime(new Date("2026-11-18T21:00:00"));
+    await page.goto("/");
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+    await expect(page.locator("#theme-toggle")).toHaveText("DAY");
+  });
+
+  test("ignores the system setting", async ({ page }) => {
+    await page.emulateMedia({ colorScheme: "dark" });
+    await page.clock.setFixedTime(new Date("2026-11-18T10:00:00"));
+    await page.goto("/");
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  });
+
+  test("a tap is remembered across pages until the next switch", async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-11-18T10:00:00"));
     await page.goto("/");
     const btn = page.locator("#theme-toggle");
-    await expect(btn).toHaveText("NIGHT");
     await btn.click();
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
     await expect(btn).toHaveText("DAY");
     await page.goto("/read");
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+
+    // After 19:00 the tap has expired and the clock decides again (night).
+    await page.clock.setFixedTime(new Date("2026-11-18T19:30:00"));
+    await page.goto("/");
     await page.locator("#theme-toggle").click();
     await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
-  });
-
-  test("follows the system setting until chosen", async ({ page }) => {
-    await page.emulateMedia({ colorScheme: "dark" });
+    // The next morning the clock takes over again.
+    await page.clock.setFixedTime(new Date("2026-11-19T08:00:00"));
     await page.goto("/");
-    await expect(page.locator("#theme-toggle")).toHaveText("DAY");
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+    await page.clock.setFixedTime(new Date("2026-11-19T20:00:00"));
+    await page.goto("/");
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   });
 });
 
