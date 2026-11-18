@@ -1,7 +1,7 @@
 // What the pages show: the NEW and SORTED BY PRICE sections, tags and price format.
 import { describe, it, expect } from "vitest";
 import data from "../../src/data/gifts.json";
-import { gifts, allTags, sections, formatPrice, newVisible, GRID_COLUMNS } from "../../src/lib/gifts";
+import { gifts, allTags, sections, formatPrice, newVisible, priceBands, GRID_COLUMNS } from "../../src/lib/gifts";
 import { site } from "../../src/site.config";
 
 describe("gifts", () => {
@@ -67,4 +67,31 @@ describe("formatPrice", () => {
     [100000, "₹1,00,000"],
     [12.6, "₹13"],
   ])("%s → %s", (p, out) => expect(formatPrice(p)).toBe(out));
+});
+
+describe("price bands", () => {
+  // UNDER ₹500 is a tighter cap inside UNDER ₹1,000; every other band is one slice.
+  const slices = priceBands.filter((b) => b.id !== "under-500");
+
+  it("run end to end from ₹0 with no gaps or overlaps, besides the UNDER ₹500 cap", () => {
+    expect(slices[0].min).toBe(0);
+    expect(slices.at(-1)!.max).toBe(Infinity);
+    for (let i = 1; i < slices.length; i++) expect(slices[i].min).toBe(slices[i - 1].max);
+  });
+
+  it("put every live gift in exactly one slice", () => {
+    for (const g of gifts) expect(slices.filter((b) => g.price >= b.min && g.price < b.max), g.title).toHaveLength(1);
+  });
+
+  it("UNDER ₹500 sits inside UNDER ₹1,000 and comes first in the menu", () => {
+    const [under500, under1000] = priceBands;
+    expect(under500.id).toBe("under-500");
+    expect(under500.min).toBe(under1000.min);
+    expect(under500.max).toBeLessThan(under1000.max);
+  });
+
+  it("have unique ids, safe in a URL", () => {
+    expect(new Set(priceBands.map((b) => b.id)).size).toBe(priceBands.length);
+    for (const b of priceBands) expect(b.id).toMatch(/^[a-z0-9-]+$/);
+  });
 });

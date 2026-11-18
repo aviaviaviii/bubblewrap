@@ -14,5 +14,5 @@ const { newest, byPrice } = sections(tag);
 
 <Page title={`${tag} · ${site.title}`} activeTag={tag}>
   <GiftGrid heading="NEW" gifts={newest} eager fullRows />
-  <GiftGrid heading="SORTED BY PRICE" gifts={byPrice} />
+  <GiftGrid heading="SORTED BY PRICE" gifts={byPrice} priceFilter />
 </Page>
