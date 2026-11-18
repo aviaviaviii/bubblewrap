@@ -1,47 +1,19 @@
 ---
 import { site } from "../site.config";
-import "../styles/global.css";
+import Head from "../components/Head.astro";
 
 interface Props {
   title?: string;
   activeTag?: string;
 }
 const { title = site.title, activeTag } = Astro.props;
-const canonical = new URL(Astro.url.pathname, site.url).href;
-const ogImage = new URL(site.ogImage, site.url).href;
 const marqueeItems = [...site.marquee, ...site.marquee];
 ---
 
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{title}</title>
-    <meta name="description" content={site.description} />
-    <link rel="canonical" href={canonical} />
-    <link rel="icon" href={site.favicon} />
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content={canonical} />
-    <meta property="og:title" content={title} />
-    <meta property="og:description" content={site.description} />
-    <meta property="og:image" content={ogImage} />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content={title} />
-    <meta name="twitter:description" content={site.description} />
-    <meta name="twitter:image" content={ogImage} />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap"
-      rel="stylesheet"
-    />
-    <script is:inline>
-      try {
-        const t = localStorage.getItem("theme");
-        if (t) document.documentElement.dataset.theme = t;
-      } catch (e) {}
-    </script>
+    <Head title={title} />
   </head>
   <body>
     <div class="marquee" aria-hidden="true">

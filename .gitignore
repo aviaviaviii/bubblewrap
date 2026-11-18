@@ -3,3 +3,5 @@ dist/
 .astro/
 .env
 .DS_Store
+# Raw Framer asset exports (69MB each). Source for `npm run images:import`, never committed.
+xx_raw/

@@ -25,7 +25,10 @@ npm run build    # static output in dist/
 
 - `/` shows **NEW** (the 12 most recently dated gifts) and then **SORTED BY PRICE** (every gift, most expensive first).
 - `/<tag>` (`/live`, `/play`, `/read`, `/wear`, `/cook`, `/santa`, `/work`) shows the same two sections for one tag. Only the tags in `navTags` appear in the menu.
+- `/success` is where the newsletter form should send people after signing up (copied from the live Framer page).
 - Gifts with `"draft": true` don't appear anywhere.
+
+Space Mono is self-hosted from `public/fonts/`, so the site makes no calls to Google Fonts.
 
 ### Adding a gift
 
@@ -35,7 +38,7 @@ Add an object to `src/data/gifts.json`:
 {
   "slug": "my-new-thing",
   "title": "My New Thing",
-  "image": "/images/my-new-thing.png",
+  "image": "/images/my-new-thing.webp",
   "imageAlt": "My New Thing",
   "price": 2499,
   "tags": ["live", "play"],
@@ -46,7 +49,7 @@ Add an object to `src/data/gifts.json`:
 }
 ```
 
-Put the image in `public/images/`. The `date` decides whether the gift shows under NEW.
+Put the image in `public/images/` (webp, about 800px wide). The `date` decides whether the gift shows under NEW.
 
 ### Re-importing from Framer
 
@@ -56,6 +59,6 @@ npm run import:framer   # reads data/framer-collection.csv and rewrites src/data
 
 ## Before switching the domain off Framer
 
-1. **Images:** gift images still load from `framerusercontent.com`. Run `npm run images:download` to copy them into `public/images/` and repoint the JSON, then commit. Do the same for the favicon and OG image in `src/site.config.ts`.
+1. **Images:** done for gifts. All 409 now load from `public/images/` as 800px webp, made from the PullPage asset export with `npm run images:import -- "<export folder>"`. `npm run images:download` still works as a fallback that fetches from Framer's CDN instead. The favicon and OG image are in `public/` too, so nothing loads from Framer anymore.
 2. **Newsletter:** the Framer form posted through Framer's own backend. Set `PUBLIC_NEWSLETTER_ACTION` to your email provider's form endpoint (the field is named `email`). Until it's set, the button only says "Soon!".
 3. **Deploy:** works on any static host. On Vercel, import the repo; `vercel.json` already turns on clean URLs (`/live`, not `/live.html`).

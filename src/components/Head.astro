@@ -1,0 +1,40 @@
+---
+// Everything inside <head>, shared by the gift pages (Page.astro) and /success,
+// so meta tags, the favicon and font loading live in one place.
+// Space Mono is self-hosted from public/fonts (taken from the Framer asset export),
+// so the site makes no calls to Google Fonts. The export also had Inter, but on the
+// live Framer site it only sat in an unused default text style, so it's left out.
+import { site } from "../site.config";
+import "../styles/global.css";
+
+interface Props {
+  title?: string;
+}
+const { title = site.title } = Astro.props;
+const canonical = new URL(Astro.url.pathname, site.url).href;
+const ogImage = new URL(site.ogImage, site.url).href;
+---
+
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>{title}</title>
+<meta name="description" content={site.description} />
+<link rel="canonical" href={canonical} />
+<link rel="icon" href={site.favicon} />
+<meta property="og:type" content="website" />
+<meta property="og:url" content={canonical} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={site.description} />
+<meta property="og:image" content={ogImage} />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={site.description} />
+<meta name="twitter:image" content={ogImage} />
+<link rel="preload" href="/fonts/space-mono-400.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="/fonts/space-mono-700.woff2" as="font" type="font/woff2" crossorigin />
+<script is:inline>
+  try {
+    const t = localStorage.getItem("theme");
+    if (t) document.documentElement.dataset.theme = t;
+  } catch (e) {}
+</script>

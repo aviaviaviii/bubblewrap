@@ -3,9 +3,9 @@ export const site = {
   description:
     "A link of beautiful art-like things you can gift, which warms the heart. Gifts you're tempted to keep, but love to give even more. Indulge a little.",
   url: "https://bubblewrap.in",
-  // TODO: download these into public/ and switch to "/og.png" and "/favicon.png".
-  ogImage: "https://framerusercontent.com/assets/hF1bskfZvFiIaiKbDjSKSRBpUw.png",
-  favicon: "https://framerusercontent.com/images/9M43dHlL241oVyTSHotlVpj8qlo.png",
+  // Copied from the Framer site settings (not in the asset export). Page.astro makes ogImage absolute.
+  ogImage: "/og.png",
+  favicon: "/favicon.png",
   author: { label: "AUTHOR", href: "https://twitter.com/aviaviaviii" },
 
   // Tags shown in the top nav. Every tag in the data still gets its own page (/cook, /santa, …).
