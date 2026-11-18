@@ -1,11 +1,15 @@
 // Everything /admin does, behind the password. The only server code on the site;
-// every page is static. One route, three actions (form field "action"):
-//   add      (default) a new gift: title, image, price, tags, link, draft
-//   drafts   list the gifts marked draft, newest first
-//   publish  mark one draft live (form field "slug"), dated today so it shows under NEW
+// every page is static. One route; the form field "action" picks what to do:
+//   list     every gift (live and draft), newest first. /admin calls it first, so it
+//            doubles as the password check that unlocks the page
+//   add      (default) a new gift: title, image, price, tags, link, status, date
+//   edit     change any gift (form field "slug"): the same fields, image optional.
+//            The slug, and so the image's file name, never changes, so a renamed gift
+//            can't end up pointing at a missing image
+//   publish  one click from the list: a draft goes live, dated today so it shows under NEW
 //
-// Drafts are only ever sent after the password checks out. /admin is public on the
-// custom domain, so building the list into the page would show unpublished gifts.
+// Gift data is only ever sent after the password checks out. /admin is public on the
+// custom domain, so nothing about the gifts (drafts especially) is built into the page.
 //
 // On Vercel each change is ONE commit to GitHub (git data API: blobs → tree → commit →
 // move the branch), which triggers one rebuild, so it's live about a minute later.
@@ -71,10 +75,12 @@ export const POST: APIRoute = async ({ request }) => {
 
   try {
     switch (String(form.get("action") ?? "add")) {
-      case "drafts":
-        return json(200, { drafts: await listDrafts(store) });
+      case "list":
+        return json(200, { gifts: await listGifts(store) });
       case "publish":
         return json(200, await publish(store, String(form.get("slug") ?? "")));
+      case "edit":
+        return json(200, await edit(store, String(form.get("slug") ?? ""), form));
       case "add":
         return json(200, await add(store, form));
       default:
@@ -88,18 +94,17 @@ export const POST: APIRoute = async ({ request }) => {
 
 // ---------- actions ----------
 
-async function listDrafts(store: Store) {
+async function listGifts(store: Store) {
   const { gifts } = await store.read();
   return gifts
-    .filter((g) => g.draft)
-    .sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""))
-    .map(({ slug, title, image, price, tags, date }) => ({ slug, title, image, price, tags, date }));
+    .map(({ slug, title, image, price, tags, date, link, draft }) => ({ slug, title, image, price, tags, date, link, draft }))
+    .sort((a, b) => (b.date ?? "").localeCompare(a.date ?? "") || a.title.localeCompare(b.title));
 }
 
 async function publish(store: Store, slug: string) {
   return store.change((gifts) => {
     const gift = gifts.find((g) => g.slug === slug);
-    if (!gift) throw new GiftError("That draft isn't in the list anymore");
+    if (!gift) throw new GiftError("That gift isn't in the list anymore");
     if (!gift.draft) throw new GiftError(`${gift.title} is already published`);
     const updated = { ...gift, draft: false, date: today() };
     return {
@@ -110,25 +115,66 @@ async function publish(store: Store, slug: string) {
   });
 }
 
-async function add(store: Store, form: FormData) {
+// The uploaded image as the site's webp, or null when none was chosen.
+async function readImage(form: FormData) {
   const file = form.get("image");
-  if (!(file instanceof File) || file.size === 0) throw new GiftError("Add an image");
+  if (!(file instanceof File) || file.size === 0) return null;
   if (file.size > MAX_UPLOAD) throw new GiftError("That image is too large. Try a smaller one");
-
-  let image: Buffer;
   try {
-    image = await encodeGiftImage(Buffer.from(await file.arrayBuffer()));
+    return await encodeGiftImage(Buffer.from(await file.arrayBuffer()));
   } catch {
     throw new GiftError("That file couldn't be read as an image");
   }
+}
 
-  const input = {
-    title: form.get("title"),
-    link: form.get("link"),
-    price: form.get("price"),
-    tags: form.getAll("tags").join(","),
-    draft: form.get("draft") === "on",
-  };
+// Status comes as "live" or "draft"; an empty date means today when adding and
+// "leave it" when editing.
+const readFields = (form: FormData) => ({
+  title: form.get("title"),
+  link: form.get("link"),
+  price: form.get("price"),
+  tags: form.getAll("tags").join(","),
+  draft: form.get("status") === "draft",
+  date: String(form.get("date") ?? "").trim() || undefined,
+});
+
+async function edit(store: Store, slug: string, form: FormData) {
+  const image = await readImage(form);
+  const input = readFields(form);
+  return store.change((gifts) => {
+    const current = gifts.find((g) => g.slug === slug);
+    if (!current) throw new GiftError("That gift isn't in the list anymore");
+    // Same rules as adding, checked against every other gift; then keep what makes it
+    // the same gift (slug, image path, description).
+    let checked: Gift;
+    try {
+      checked = makeGift(gifts.filter((g) => g.slug !== slug), { ...input, date: input.date ?? current.date ?? undefined });
+    } catch (e) {
+      throw new GiftError((e as Error).message);
+    }
+    const updated = {
+      ...current,
+      title: checked.title,
+      imageAlt: checked.title,
+      price: checked.price,
+      tags: checked.tags,
+      link: checked.link,
+      date: checked.date,
+      draft: checked.draft,
+    };
+    return {
+      gifts: gifts.map((g) => (g.slug === slug ? updated : g)),
+      files: image ? [{ path: `public${current.image}`, content: image }] : [],
+      message: `Edit gift: ${updated.title}\n\nEdited from /admin.`,
+      result: { title: updated.title, slug, draft: updated.draft, imageChanged: Boolean(image) },
+    };
+  });
+}
+
+async function add(store: Store, form: FormData) {
+  const image = await readImage(form);
+  if (!image) throw new GiftError("Add an image");
+  const input = readFields(form);
 
   return store.change((gifts) => {
     let gift: Gift;
