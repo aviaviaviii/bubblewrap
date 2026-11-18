@@ -37,4 +37,14 @@ export const site = {
       "https://script.google.com/macros/s/AKfycbxML_05QzArvYBM8fO7iCBvK6fYmXIFmp0VDk2SnCw46ZxcSIJnDTKjScds1ros0mrUpw/exec",
     success: "/success",
   },
+
+  // Analytics: PostHog, in bubblewrap's own PostHog organisation (the free plan allows one
+  // project per org, and the other one already holds the Total Home Solutions app, so the
+  // two sites' numbers stay apart). The project key is public by design (it ships in the
+  // page), so it lives here like the newsletter URL. Empty key = no tracking at all.
+  // Head.astro loads it on production builds only, and never on /admin.
+  posthog: {
+    key: import.meta.env.PUBLIC_POSTHOG_KEY ?? "phc_tAYwkfSyZQ3AksREkXZxNDjA9oyMjTwQVxVXz9A4QYFh",
+    host: "https://us.i.posthog.com",
+  },
 };
