@@ -46,6 +46,17 @@ describe.skipIf(!built)("built site", () => {
     expect(h).toMatch(/<html lang="en"[\s>]/);
   });
 
+  // Pin the primary domain: the bare one redirects, and a canonical or og:image that
+  // redirects costs search ranking and slows link previews.
+  it("meta URLs use the www domain", () => {
+    expect(site.url).toBe("https://www.bubblewrap.in");
+  });
+
+  // Browsers and crawlers ask for /favicon.ico without reading the page.
+  it("ships /favicon.ico", () => {
+    expect(readFileSync(join(OUT, "favicon.ico")).readUInt16LE(2)).toBe(1);
+  });
+
   it.each(publicPages)("%s links only to pages and files that exist", (path) => {
     const h = html(path);
     const internal = attrs(h, "a", "href").filter((u) => u.startsWith("/"));

@@ -2,7 +2,9 @@ export const site = {
   title: "bubblewrap - gifts that feel like art",
   description:
     "A link of beautiful art-like things you can gift, which warms the heart. Gifts you're tempted to keep, but love to give even more. Indulge a little.",
-  url: "https://bubblewrap.in",
+  // www is the primary domain on Vercel; the bare domain 308s to it. Canonical, og:url and
+  // og:image are built from this, so pointing at the bare domain sent them through a redirect.
+  url: "https://www.bubblewrap.in",
   // Copied from the Framer site settings (not in the asset export). Page.astro makes ogImage absolute.
   ogImage: "/og.png",
   favicon: "/favicon.png",
