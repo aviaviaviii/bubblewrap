@@ -19,7 +19,13 @@
 // hairlines, no pills or colour for status. On phones the table becomes stacked rows.
 // Show/Hide on the password: typing a long password blind on a phone is where the
 // "Wrong password" mix-ups came from.
-// Left out on purpose (not asked for yet): delete, search, filters, bulk actions.
+// Above the list: search (title and tags), status and tag filters, and a sort menu.
+// Sort is a menu, not clickable column headers: the headers are gone on phones, so
+// headers would have meant two sort controls. The choices survive going in and out of
+// an edit page (they live in memory, reset on reload or Lock).
+// Thumbnails open the full image in a <dialog> (Escape, the close button or a click
+// outside closes it), above the row's click-to-edit area.
+// Left out on purpose (not asked for yet): delete, bulk actions.
 import Head from "../components/Head.astro";
 import { site } from "../site.config";
 ---
@@ -59,6 +65,24 @@ import { site } from "../site.config";
         </div>
       </header>
       <p class="status" id="list-status" role="status" aria-live="polite"></p>
+      <div class="toolbar">
+        <input type="search" id="q" placeholder="Search" aria-label="Search gifts" autocomplete="off" />
+        <select id="f-status" aria-label="Status">
+          <option value="">All</option>
+          <option value="live">Live</option>
+          <option value="draft">Drafts</option>
+        </select>
+        <select id="f-tag" aria-label="Tag"><option value="">All tags</option></select>
+        <select id="sort" aria-label="Sort">
+          <option value="drafts">Drafts first</option>
+          <option value="new">Newest</option>
+          <option value="old">Oldest</option>
+          <option value="price-desc">Price, high to low</option>
+          <option value="price-asc">Price, low to high</option>
+          <option value="title">Title, A to Z</option>
+        </select>
+      </div>
+      <p class="empty" id="empty" hidden>No gifts match. <button type="button" class="text-button" id="clear">Clear</button></p>
       <div class="table" role="table" aria-label="Gifts">
         <div class="row head" role="row">
           <span role="columnheader" class="c-img"><span class="sr">Image</span></span>
@@ -71,6 +95,12 @@ import { site } from "../site.config";
         <div id="rows" role="rowgroup"></div>
       </div>
     </main>
+
+    <dialog id="viewer" aria-label="Image">
+      <button type="button" class="viewer-close" aria-label="Close">×</button>
+      <img alt="" />
+      <p class="viewer-title"></p>
+    </dialog>
 
     <!-- ---------- add / edit ---------- -->
     <main id="form-view" class="narrow" hidden>
@@ -179,6 +209,8 @@ import { site } from "../site.config";
         gifts = [];
         rows.replaceChildren(); // nothing about the gifts stays in the page once locked
         form.reset();
+        q.value = fStatus.value = fTag.value = "";
+        sortBy.value = "drafts";
         try { sessionStorage.removeItem(KEY); } catch {}
         password.value = "";
         listView.hidden = formView.hidden = true;
@@ -222,15 +254,65 @@ import { site } from "../site.config";
 
       // ---------- list ----------
 
-      // Drafts first (they're the ones waiting on you), then newest first like the site.
-      // By date alone, drafts started in July sat ~200 rows down.
-      const order = (a: Gift, b: Gift) => Number(b.draft) - Number(a.draft) || (b.date ?? "").localeCompare(a.date ?? "");
+      const q = $<HTMLInputElement>("#q");
+      const fStatus = $<HTMLSelectElement>("#f-status");
+      const fTag = $<HTMLSelectElement>("#f-tag");
+      const sortBy = $<HTMLSelectElement>("#sort");
+
+      const byDate = (a: Gift, b: Gift) => (b.date ?? "").localeCompare(a.date ?? "");
+      // "Drafts first" is the default: drafts are the ones waiting on you, and by date
+      // alone the July drafts sat ~200 rows down.
+      const sorts: Record<string, (a: Gift, b: Gift) => number> = {
+        drafts: (a, b) => Number(b.draft) - Number(a.draft) || byDate(a, b),
+        new: byDate,
+        // Undated gifts (one, Akela) go last here too, not first.
+        old: (a, b) => Number(!a.date) - Number(!b.date) || -byDate(a, b),
+        "price-desc": (a, b) => b.price - a.price,
+        "price-asc": (a, b) => a.price - b.price,
+        title: (a, b) => a.title.localeCompare(b.title, "en", { sensitivity: "base" }),
+      };
+
+      function tagOptions() {
+        const keep = fTag.value;
+        const tags = [...new Set(gifts.flatMap((g) => g.tags))].sort();
+        fTag.replaceChildren(new Option("All tags", ""), ...tags.map((t) => new Option(t, t)));
+        fTag.value = tags.includes(keep) ? keep : "";
+      }
 
       function renderList() {
+        tagOptions();
+        const term = q.value.trim().toLowerCase();
+        const shown = gifts
+          .filter((g) => !fStatus.value || (fStatus.value === "draft") === g.draft)
+          .filter((g) => !fTag.value || g.tags.includes(fTag.value))
+          .filter((g) => !term || g.title.toLowerCase().includes(term) || g.tags.some((t) => t.includes(term)))
+          .sort(sorts[sortBy.value] ?? sorts.drafts);
         const drafts = gifts.filter((g) => g.draft).length;
-        $<HTMLElement>("#count").textContent = `${gifts.length} gifts${drafts ? ` · ${drafts} draft${drafts === 1 ? "" : "s"}` : ""}`;
-        rows.replaceChildren(...[...gifts].sort(order).map(row));
+        const total = `${gifts.length} gifts${drafts ? ` · ${drafts} draft${drafts === 1 ? "" : "s"}` : ""}`;
+        $<HTMLElement>("#count").textContent = shown.length === gifts.length ? total : `Showing ${shown.length} of ${total}`;
+        $<HTMLElement>("#empty").hidden = shown.length > 0;
+        rows.replaceChildren(...shown.map(row));
       }
+
+      q.addEventListener("input", renderList);
+      for (const el of [fStatus, fTag, sortBy]) el.addEventListener("change", renderList);
+      $<HTMLButtonElement>("#clear").addEventListener("click", () => {
+        q.value = fStatus.value = fTag.value = "";
+        renderList();
+        q.focus();
+      });
+
+      // ---------- full-size image ----------
+
+      const viewer = $<HTMLDialogElement>("#viewer");
+      function view(g: Gift) {
+        $<HTMLImageElement>("img", viewer).src = g.image;
+        $<HTMLElement>(".viewer-title", viewer).textContent = g.title;
+        viewer.showModal();
+      }
+      $<HTMLButtonElement>(".viewer-close", viewer).addEventListener("click", () => viewer.close());
+      // A click on the dim backdrop lands on the dialog element itself.
+      viewer.addEventListener("click", (e) => { if (e.target === viewer) viewer.close(); });
 
       function cell(cls: string, ...kids: (Node | string)[]) {
         const s = document.createElement("span");
@@ -252,6 +334,12 @@ import { site } from "../site.config";
         img.decoding = "async";
         // A gift added minutes ago has no image on the site until the rebuild finishes.
         img.onerror = () => img.classList.add("missing");
+        const thumb = document.createElement("button");
+        thumb.type = "button";
+        thumb.className = "thumb";
+        thumb.setAttribute("aria-label", `View image of ${g.title}`);
+        thumb.append(img);
+        thumb.addEventListener("click", () => view(g));
 
         // The title link stretches over the whole row (see .row-link::after), so any
         // click on the row opens it, while Publish stays its own button above it.
@@ -279,7 +367,7 @@ import { site } from "../site.config";
         price.dataset.tags = ` · ${g.tags.join(", ")}`; // shown beside the price on phones
 
         r.append(
-          cell("c-img", img),
+          cell("c-img", thumb),
           cell("c-title", link),
           status,
           price,
@@ -513,6 +601,47 @@ import { site } from "../site.config";
       .row.head { color: var(--muted); font-size: 12px; padding-top: 0; padding-bottom: 8px; border-top: 0; }
       .row:not(.head):hover { background: color-mix(in srgb, var(--fg) 5%, transparent); }
       .c-img img { width: 48px; height: 52px; object-fit: contain; display: block; }
+      .thumb { position: relative; z-index: 1; padding: 0; border: 0; background: none; cursor: zoom-in; display: block; }
+
+      .toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+      .toolbar input { flex: 1 1 220px; }
+      .toolbar select {
+        font: inherit;
+        font-size: 14px;
+        padding: 0 10px;
+        min-height: 46px;
+        border: 1px solid color-mix(in srgb, var(--fg) 25%, transparent);
+        border-radius: 0;
+        background: var(--input-bg);
+        color: var(--input-fg);
+      }
+      .empty { font-size: 14px; color: var(--muted); padding: 24px 8px; margin: 0; }
+      .text-button { font: inherit; padding: 0; border: 0; background: none; color: var(--fg); text-decoration: underline; cursor: pointer; }
+
+      #viewer {
+        padding: 16px;
+        border: 0;
+        background: var(--bg);
+        color: var(--fg);
+        max-width: min(92vw, 860px);
+        max-height: 92vh;
+      }
+      #viewer::backdrop { background: rgb(0 0 0 / 0.6); }
+      #viewer img { display: block; max-width: 100%; max-height: calc(92vh - 96px); margin: 0 auto; object-fit: contain; }
+      .viewer-title { margin: 12px 0 0; font-size: 14px; text-align: center; }
+      .viewer-close {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        width: 40px;
+        height: 40px;
+        font: inherit;
+        font-size: 22px;
+        border: 0;
+        background: var(--bg);
+        color: var(--fg);
+        cursor: pointer;
+      }
       .c-img img.missing { visibility: hidden; }
       .c-price, .c-date { font-variant-numeric: tabular-nums; }
       .c-tags, .c-date { color: var(--muted); }
@@ -541,6 +670,11 @@ import { site } from "../site.config";
         .c-status { grid-area: status; font-size: 12px; color: var(--muted); margin-top: 4px; }
         .c-date { display: none; }
         .c-status .secondary.small { font-size: 13px; padding: 11px 16px; } /* a thumb-sized target */
+        /* Search, then Status and Tags side by side, then Sort on its own line.
+           Three menus on one line cut the sort label to "Drafts f…". */
+        .toolbar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .toolbar input, .toolbar #sort { grid-column: 1 / -1; }
+        .toolbar select { min-width: 0; }
         .c-price::after { content: attr(data-tags); }
       }
     </style>
