@@ -3998,13 +3998,13 @@
     "imageAlt": "Santa Red Wine Glass",
     "price": 3800,
     "tags": [
-      "cook",
-      "live"
+      "live",
+      "cook"
     ],
     "date": "2025-05-18",
     "link": "https://rayt.in/products/santa-red-wine-glass",
     "description": "",
-    "draft": false
+    "draft": true
   },
   {
     "slug": "handmade-bamboo-coasters-with-motif-(set-of-4)",
