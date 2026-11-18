@@ -342,11 +342,11 @@
     "title": "Veg Everything: Cookbook",
     "image": "/images/veg-everything-cookbook.webp",
     "imageAlt": "Veg Everything: Cookbook",
-    "price": 3785,
+    "price": 3736,
     "tags": [
-      "cook",
       "live",
-      "read"
+      "read",
+      "cook"
     ],
     "date": "2026-09-27",
     "link": "https://www.amazon.in/Veg-Everything-Weeknights-Vegetarian-Cookbook/dp/0593836626",
