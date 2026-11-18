@@ -7,6 +7,8 @@
 //            The slug, and so the image's file name, never changes, so a renamed gift
 //            can't end up pointing at a missing image
 //   publish  one click from the list: a draft goes live, dated today so it shows under NEW
+//   delete   remove one gift (form field "slug") and its image, in one commit. Git
+//            history keeps both, so a deleted gift can be brought back from there
 //
 // Gift data is only ever sent after the password checks out. /admin is public on the
 // custom domain, so nothing about the gifts (drafts especially) is built into the page.
@@ -33,7 +35,8 @@ const DATA_PATH = "src/data/gifts.json";
 const MAX_UPLOAD = 4 * 1024 * 1024; // Vercel caps request bodies at 4.5MB; the page shrinks big photos first
 
 type Gift = { slug: string; title: string; image: string; price: number; tags: string[]; date: string | null; draft: boolean; [k: string]: unknown };
-type Change = { gifts: Gift[]; files?: { path: string; content: Buffer }[]; message: string; result: object };
+// A file with content null is removed (delete takes the gift's image away with it).
+type Change = { gifts: Gift[]; files?: { path: string; content: Buffer | null }[]; message: string; result: object };
 
 const json = (status: number, body: object) =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
@@ -81,6 +84,8 @@ export const POST: APIRoute = async ({ request }) => {
         return json(200, await publish(store, String(form.get("slug") ?? "")));
       case "edit":
         return json(200, await edit(store, String(form.get("slug") ?? ""), form));
+      case "delete":
+        return json(200, await remove(store, String(form.get("slug") ?? "")));
       case "add":
         return json(200, await add(store, form));
       default:
@@ -99,6 +104,21 @@ async function listGifts(store: Store) {
   return gifts
     .map(({ slug, title, image, price, tags, date, link, draft }) => ({ slug, title, image, price, tags, date, link, draft }))
     .sort((a, b) => (b.date ?? "").localeCompare(a.date ?? "") || a.title.localeCompare(b.title));
+}
+
+async function remove(store: Store, slug: string) {
+  return store.change((gifts) => {
+    const gift = gifts.find((g) => g.slug === slug);
+    if (!gift) throw new GiftError("That gift isn't in the list anymore");
+    // Only take the image away if no other gift points at the same file.
+    const shared = gifts.some((g) => g.slug !== slug && g.image === gift.image);
+    return {
+      gifts: gifts.filter((g) => g.slug !== slug),
+      files: shared ? [] : [{ path: `public${gift.image}`, content: null }],
+      message: `Delete gift: ${gift.title}\n\nDeleted from /admin.`,
+      result: { title: gift.title, slug },
+    };
+  });
 }
 
 async function publish(store: Store, slug: string) {
@@ -159,7 +179,7 @@ async function edit(store: Store, slug: string, form: FormData) {
       price: checked.price,
       tags: checked.tags,
       link: checked.link,
-      date: checked.date,
+      date: input.date ? checked.date : current.date, // an empty Date field keeps what it had, even none
       draft: checked.draft,
     };
     return {
@@ -220,9 +240,12 @@ function localStore(): Store {
     where: "local",
     read,
     async change(fn) {
-      const { writeFile } = await import("node:fs/promises");
+      const { writeFile, rm } = await import("node:fs/promises");
       const c = fn((await read()).gifts);
-      for (const f of c.files ?? []) await writeFile(f.path, f.content);
+      for (const f of c.files ?? []) {
+        if (f.content) await writeFile(f.path, f.content);
+        else await rm(f.path, { force: true });
+      }
       await writeFile(DATA_PATH, serialise(c.gifts));
       return { ...c.result, where: "local" };
     },
@@ -266,8 +289,12 @@ function githubStore(token: string): Store {
         const c = fn(gifts);
         const commit = await gh(`/git/commits/${head}`);
         const blobs = await Promise.all([
-          ...(c.files ?? []).map((f) => post("/git/blobs", { content: f.content.toString("base64"), encoding: "base64" }).then((b) => ({ path: f.path, sha: b.sha }))),
-          post("/git/blobs", { content: serialise(c.gifts), encoding: "utf-8" }).then((b) => ({ path: DATA_PATH, sha: b.sha })),
+          ...(c.files ?? []).map((f) =>
+            f.content
+              ? post("/git/blobs", { content: f.content.toString("base64"), encoding: "base64" }).then((b) => ({ path: f.path, sha: b.sha as string | null }))
+              : Promise.resolve({ path: f.path, sha: null }), // sha null in a tree removes the file
+          ),
+          post("/git/blobs", { content: serialise(c.gifts), encoding: "utf-8" }).then((b) => ({ path: DATA_PATH, sha: b.sha as string | null })),
         ]);
         const tree = await post("/git/trees", {
           base_tree: commit.tree.sha,

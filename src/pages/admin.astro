@@ -25,7 +25,10 @@
 // an edit page (they live in memory, reset on reload or Lock).
 // Thumbnails open the full image in a <dialog> (Escape, the close button or a click
 // outside closes it), above the row's click-to-edit area.
-// Left out on purpose (not asked for yet): delete, bulk actions.
+// Delete lives at the bottom of the edit page only, as a two-step: "Delete gift" swaps
+// in "Delete <title>? It comes off the site." with Delete and Keep, so one stray tap
+// can't remove a gift. No red: the words carry it. Git history keeps deleted gifts.
+// Left out on purpose (not asked for yet): bulk actions.
 import Head from "../components/Head.astro";
 import { site } from "../site.config";
 ---
@@ -140,6 +143,17 @@ import { site } from "../site.config";
         </div>
         <p class="status" role="status" aria-live="polite"></p>
       </form>
+      <div class="delete-zone" id="delete-zone" hidden>
+        <button type="button" class="secondary" id="delete-start">Delete gift</button>
+        <div id="delete-confirm" hidden>
+          <p id="delete-question"></p>
+          <div class="actions">
+            <button type="button" class="primary" id="delete-yes">Delete</button>
+            <button type="button" class="secondary" id="delete-no">Keep</button>
+          </div>
+        </div>
+        <p class="status" id="delete-status" role="status" aria-live="polite"></p>
+      </div>
     </main>
 
     <script>
@@ -424,6 +438,7 @@ import { site } from "../site.config";
       function fillForm(g: Gift | null) {
         editing = g;
         form.reset();
+        resetDelete(g);
         say(formStatus, "");
         $<HTMLElement>("#form-heading").textContent = g ? "Edit gift" : "Add a gift";
         submit.textContent = g ? "Save" : "Add gift";
@@ -435,7 +450,9 @@ import { site } from "../site.config";
         field("title").value = g?.title ?? "";
         field("price").value = g ? String(g.price) : "";
         field("link").value = g?.link ?? "";
-        field("date").value = g?.date ?? new Date().toISOString().slice(0, 10);
+        // An undated gift stays undated unless you pick a date; filling in today here
+        // would quietly move it under NEW on the next save.
+        field("date").value = g ? (g.date ?? "") : new Date().toISOString().slice(0, 10);
         $<HTMLInputElement>(`input[name=status][value=${g?.draft ? "draft" : "live"}]`, form).checked = true;
         $<HTMLInputElement>(".new-tag input", form).value = (g?.tags ?? []).filter((t) => !known.has(t)).join(", ");
       }
@@ -496,6 +513,55 @@ import { site } from "../site.config";
         } finally {
           submit.disabled = false;
           submit.textContent = editing ? "Save" : "Add gift";
+        }
+      });
+
+      // ---------- delete ----------
+
+      const deleteZone = $<HTMLElement>("#delete-zone");
+      const deleteStart = $<HTMLButtonElement>("#delete-start");
+      const deleteConfirm = $<HTMLElement>("#delete-confirm");
+      const deleteYes = $<HTMLButtonElement>("#delete-yes");
+      const deleteStatus = $<HTMLElement>("#delete-status");
+
+      function resetDelete(g: Gift | null) {
+        deleteZone.hidden = !g;
+        deleteConfirm.hidden = true;
+        deleteStart.hidden = false;
+        deleteYes.disabled = false;
+        deleteYes.textContent = "Delete";
+        say(deleteStatus, "");
+      }
+
+      deleteStart.addEventListener("click", () => {
+        if (!editing) return;
+        $<HTMLElement>("#delete-question").textContent = `Delete ${editing.title}? It comes off the site.`;
+        deleteStart.hidden = true;
+        deleteConfirm.hidden = false;
+        $<HTMLButtonElement>("#delete-no").focus();
+      });
+      $<HTMLButtonElement>("#delete-no").addEventListener("click", () => {
+        resetDelete(editing);
+        deleteStart.focus();
+      });
+      deleteYes.addEventListener("click", async () => {
+        if (!editing) return;
+        const g = editing;
+        deleteYes.disabled = true;
+        deleteYes.textContent = "Deleting";
+        say(deleteStatus, "");
+        try {
+          const body = new FormData();
+          body.set("slug", g.slug);
+          const out = await send("delete", body);
+          await refresh();
+          say(listStatus, `Deleted ${g.title}.${out.where === "github" ? " Off the site in about a minute." : ""}`, true);
+          location.hash = "";
+        } catch (err) {
+          if ((err as { status?: number }).status === 401) return lock("Wrong password. Enter it again");
+          say(deleteStatus, problem(err));
+          deleteYes.disabled = false;
+          deleteYes.textContent = "Delete";
         }
       });
 
@@ -577,6 +643,10 @@ import { site } from "../site.config";
       .actions .secondary { display: flex; align-items: center; }
       .status { margin: 0; min-height: 1.4em; font-size: 14px; color: var(--muted); }
       .status[data-ok="true"] { color: var(--fg); }
+      .delete-zone { margin-top: 48px; padding-top: 24px; border-top: 1px solid color-mix(in srgb, var(--fg) 12%, transparent); display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
+      .delete-zone p { margin: 0; font-size: 14px; }
+      #delete-confirm { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+      #delete-confirm .actions .primary { flex: 1; }
       .back { display: inline-block; margin-bottom: 24px; font-size: 14px; color: var(--muted); }
       .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 
