@@ -15,6 +15,7 @@ import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { createInterface } from "node:readline/promises";
 import { parseArgs } from "node:util";
 import { writeGiftImage } from "./lib/gift-image.mjs";
+import { makeGift, knownTags as tagsIn } from "../src/lib/gift-core.mjs";
 
 const DATA = "src/data/gifts.json";
 
@@ -32,7 +33,7 @@ const { values: opt, positionals } = parseArgs({
 });
 
 const gifts = JSON.parse(readFileSync(DATA, "utf8"));
-const knownTags = [...new Set(gifts.flatMap((g) => g.tags))].sort();
+const knownTags = tagsIn(gifts);
 
 // Reads answers line by line rather than with rl.question(), which drops lines that
 // arrive together (pasted or piped answers) and leaves the next prompt hanging.
@@ -48,49 +49,33 @@ const ask = async (q) => {
 };
 const fail = (msg) => { rl?.close(); console.error(msg); process.exit(1); };
 
+// Link and image are checked as soon as they're given, so a duplicate or a typo'd
+// path stops before the other questions. Everything else is checked by makeGift,
+// the same rules /admin uses.
 const link = positionals[0] || (await ask("Shop link: "));
-if (!/^https?:\/\//.test(link)) fail(`The link should start with http:// or https:// (got "${link}")`);
-if (gifts.some((g) => g.link === link)) fail(`Already listed: ${gifts.find((g) => g.link === link).title}`);
+const listed = gifts.find((g) => g.link === link.trim());
+if (listed) fail(`Already listed: ${listed.title}`);
 
 const image = (opt.image || (await ask("Image file: "))).replace(/^~(?=\/)/, process.env.HOME).replace(/^['"]|['"]$/g, "");
 if (!existsSync(image)) fail(`No image at ${image}`);
 
 const title = opt.title || (await ask("Title: "));
-if (!title) fail("A title is needed");
-
-const priceText = opt.price || (await ask("Price in ₹: "));
-const price = Number(priceText.replace(/[₹,\s]/g, ""));
-if (!Number.isFinite(price) || price <= 0) fail(`The price should be a number (got "${priceText}")`);
-
-const tagsText = opt.tags || (await ask(`Tags, comma separated (${knownTags.join(", ")}): `));
-const tags = [...new Set(tagsText.toLowerCase().split(/[\s,]+/).filter(Boolean))];
-if (!tags.length) fail("At least one tag is needed");
-const newTags = tags.filter((t) => !knownTags.includes(t));
-
-const date = opt.date || new Date().toISOString().slice(0, 10);
-if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) fail(`The date should look like 2026-11-18 (got "${date}")`);
+const price = opt.price || (await ask("Price in ₹: "));
+const tags = opt.tags || (await ask(`Tags, comma separated (${knownTags.join(", ")}): `));
 rl?.close();
 
-const slug = title.toLowerCase().normalize("NFKD").replace(/[^\w\s-]/g, "").trim().replace(/[\s_-]+/g, "-");
-if (!slug) fail(`Couldn't make a slug from "${title}"`);
-if (gifts.some((g) => g.slug === slug)) fail(`A gift with the slug "${slug}" already exists`);
-
-const gift = {
-  slug,
-  title,
-  image: await writeGiftImage(image, slug),
-  imageAlt: title,
-  price,
-  tags,
-  date,
-  link,
-  description: opt.description ?? "",
-  draft: opt.draft,
-};
+let gift;
+try {
+  gift = makeGift(gifts, { title, link, price, tags, date: opt.date, description: opt.description, draft: opt.draft });
+} catch (e) {
+  fail(e.message);
+}
+await writeGiftImage(image, gift.slug);
+const newTags = gift.tags.filter((t) => !knownTags.includes(t));
 
 writeFileSync(DATA, JSON.stringify([gift, ...gifts], null, 2) + "\n");
 
-console.log(`Added "${title}" · ₹${price.toLocaleString("en-IN")} · ${tags.join(", ")} · ${date}${gift.draft ? " · draft" : ""}`);
+console.log(`Added "${gift.title}" · ₹${gift.price.toLocaleString("en-IN")} · ${gift.tags.join(", ")} · ${gift.date}${gift.draft ? " · draft" : ""}`);
 console.log(`  image: public${gift.image}`);
 if (newTags.length) console.log(`  new tag: ${newTags.join(", ")} gets its own page (/${newTags[0]}); add it to navTags in src/site.config.ts to show it in the menu`);
 console.log("Check it with npm run dev, then commit and push.");

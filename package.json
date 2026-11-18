@@ -12,6 +12,8 @@
     "images:local": "node scripts/use-local-images.mjs"
   },
   "dependencies": {
-    "astro": "7.4.12"
+    "@astrojs/vercel": "11.0.22",
+    "astro": "7.4.12",
+    "sharp": "0.35.5"
   }
 }

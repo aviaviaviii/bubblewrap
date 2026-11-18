@@ -1,0 +1,168 @@
+---
+// /admin: add a gift from any browser, phone included. One column, every field
+// visible at once, nothing hidden behind steps. The password is checked by the
+// server (src/pages/api/gift.ts) on every save; this page itself holds nothing
+// secret, so it's a static page with noindex.
+// Same five things `npm run gift` asks for (title, image, price, tags, link), plus
+// a draft box. Fields keep the browser's own labels-above-inputs pattern and the
+// site's Space Mono; no new components.
+// Tags are tick boxes of the ones in use (menu tags first) plus a field for a new
+// one, so a typo can't quietly create a new page.
+import Head from "../components/Head.astro";
+import data from "../data/gifts.json";
+import { site } from "../site.config";
+
+const inUse = [...new Set((data as { tags: string[] }[]).flatMap((g) => g.tags))];
+const tags = [...site.navTags, ...inUse.filter((t) => !site.navTags.includes(t)).sort()];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <Head title="Add a gift · bubblewrap" />
+    <meta name="robots" content="noindex, nofollow" />
+  </head>
+  <body class="admin">
+    <main>
+      <h1>Add a gift</h1>
+      <form id="gift" novalidate>
+        <label>Title<input name="title" required autocomplete="off" /></label>
+
+        <label>Image
+          <input name="image" type="file" accept="image/*" required />
+        </label>
+        <img class="preview" alt="" hidden />
+
+        <label>Price in ₹<input name="price" inputmode="numeric" required autocomplete="off" placeholder="2499" /></label>
+
+        <fieldset>
+          <legend>Tags</legend>
+          <div class="tags">
+            {tags.map((t) => <label class="tag"><input type="checkbox" name="tags" value={t} />{t}</label>)}
+          </div>
+          <label class="new-tag">New tag<input name="tags" autocomplete="off" placeholder="optional" /></label>
+        </fieldset>
+
+        <label>Link<input name="link" type="url" inputmode="url" required autocomplete="off" placeholder="https://" /></label>
+
+        <label class="check"><input name="draft" type="checkbox" />Draft, hidden from the site</label>
+
+        <label>Password<input name="password" type="password" required autocomplete="current-password" /></label>
+
+        <button type="submit">Add gift</button>
+        <p class="status" role="status" aria-live="polite"></p>
+      </form>
+    </main>
+
+    <script>
+      const form = document.getElementById("gift") as HTMLFormElement;
+      const fileInput = form.elements.namedItem("image") as HTMLInputElement;
+      const preview = form.querySelector(".preview") as HTMLImageElement;
+      const status = form.querySelector(".status") as HTMLElement;
+      const button = form.querySelector("button") as HTMLButtonElement;
+
+      fileInput.addEventListener("change", () => {
+        const f = fileInput.files?.[0];
+        preview.hidden = !f;
+        if (f) preview.src = URL.createObjectURL(f);
+      });
+
+      // Vercel refuses uploads over 4.5MB, and phone photos are often bigger.
+      // Anything over 3.5MB is shrunk here to 1600px first (the server makes the
+      // final 800px webp). Webp where the browser can make it, keeping transparency;
+      // otherwise JPEG.
+      async function shrink(f: File): Promise<Blob> {
+        if (f.size <= 3.5 * 1024 * 1024) return f;
+        const bmp = await createImageBitmap(f);
+        const scale = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+        const c = document.createElement("canvas");
+        c.width = Math.round(bmp.width * scale);
+        c.height = Math.round(bmp.height * scale);
+        c.getContext("2d")!.drawImage(bmp, 0, 0, c.width, c.height);
+        const as = (type: string) => new Promise<Blob | null>((r) => c.toBlob(r, type, 0.9));
+        const webp = await as("image/webp");
+        return webp?.type === "image/webp" ? webp : (await as("image/jpeg"))!;
+      }
+
+      const say = (text: string, ok = false) => {
+        status.textContent = text;
+        status.dataset.ok = String(ok);
+      };
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const f = fileInput.files?.[0];
+        const missing = [
+          !(form.elements.namedItem("title") as HTMLInputElement).value.trim() && "a title",
+          !f && "an image",
+          !(form.elements.namedItem("price") as HTMLInputElement).value.trim() && "a price",
+          !new FormData(form).getAll("tags").some((t) => String(t).trim()) && "a tag",
+          !(form.elements.namedItem("link") as HTMLInputElement).value.trim() && "a link",
+          !(form.elements.namedItem("password") as HTMLInputElement).value && "the password",
+        ].filter(Boolean);
+        if (missing.length) return say(`Still needs ${missing.join(", ")}`);
+
+        button.disabled = true;
+        button.textContent = "Adding";
+        say("");
+        try {
+          const body = new FormData(form);
+          body.set("image", await shrink(f!), f!.name);
+          const res = await fetch("/api/gift", { method: "POST", body });
+          const out = await res.json().catch(() => ({ error: "Something went wrong. Try again" }));
+          if (!res.ok) return say(out.error);
+
+          const where = out.where === "github" ? "It'll be on the site in about a minute." : "Saved to your local files.";
+          say(`Added ${out.title}${out.draft ? " as a draft" : ""}. ${out.draft ? "" : where}`.trim(), true);
+          const keep = (form.elements.namedItem("password") as HTMLInputElement).value;
+          form.reset();
+          (form.elements.namedItem("password") as HTMLInputElement).value = keep;
+          preview.hidden = true;
+        } catch {
+          say("Couldn't reach the site. Check your connection and try again");
+        } finally {
+          button.disabled = false;
+          button.textContent = "Add gift";
+        }
+      });
+    </script>
+
+    <style>
+      .admin main { max-width: 420px; margin: 0 auto; padding: 40px 16px 64px; }
+      h1 { font-size: 20px; margin: 0 0 28px; }
+      form { display: flex; flex-direction: column; gap: 20px; }
+      label { display: flex; flex-direction: column; gap: 6px; }
+      input:not([type="checkbox"]):not([type="file"]) {
+        font: inherit;
+        font-size: 16px; /* 16px stops iOS zooming into the field */
+        padding: 12px;
+        border: 1px solid color-mix(in srgb, var(--fg) 25%, transparent);
+        border-radius: 0;
+        background: var(--input-bg);
+        color: var(--input-fg);
+      }
+      input:focus-visible { outline: 2px solid var(--fg); outline-offset: 1px; }
+      input[type="file"] { font: inherit; font-size: 14px; }
+      .preview { width: 110px; height: 120px; object-fit: contain; }
+      fieldset { border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+      legend { padding: 0; margin-bottom: 6px; }
+      .tags { display: flex; flex-wrap: wrap; gap: 8px 16px; }
+      .tag, .check { flex-direction: row; align-items: center; gap: 6px; font-size: 14px; }
+      .tag input, .check input { width: 18px; height: 18px; margin: 0; accent-color: var(--fg); }
+      button {
+        font: inherit;
+        font-size: 16px;
+        font-weight: 700;
+        padding: 15px 18px;
+        border: 0;
+        border-radius: 0;
+        background: var(--button-bg);
+        color: #fff;
+        cursor: pointer;
+      }
+      button:disabled { cursor: progress; opacity: 0.7; }
+      .status { margin: 0; min-height: 1.4em; font-size: 14px; color: var(--muted); }
+      .status[data-ok="true"] { color: var(--fg); }
+    </style>
+  </body>
+</html>

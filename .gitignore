@@ -5,3 +5,4 @@ dist/
 .DS_Store
 # Raw files (original image exports, notes). Large and personal, never committed.
 xx_raw/
+.vercel/
