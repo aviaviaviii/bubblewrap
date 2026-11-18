@@ -1,10 +1,11 @@
-// Copies gift images from a local folder (e.g. ~/Downloads) into public/images/
-// and points src/data/gifts.json at them.
+// Encodes gift images from a local folder (e.g. ~/Downloads) into public/images/
+// (800px webp, via lib/gift-image.mjs) and points src/data/gifts.json at them.
 // A file matches a gift if its name (without extension) equals either the
 // Framer image id (e.g. mUWGTdVfPfQ0oc9BnsHBxHgnk) or the gift's slug.
 // Usage: node scripts/use-local-images.mjs ~/Downloads
-import { readFileSync, writeFileSync, readdirSync, copyFileSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, readdirSync } from "node:fs";
 import { join, extname, basename } from "node:path";
+import { writeGiftImage, OUT } from "./lib/gift-image.mjs";
 
 const dir = process.argv[2];
 if (!dir) {
@@ -13,8 +14,6 @@ if (!dir) {
 }
 
 const DATA = "src/data/gifts.json";
-const OUT = "public/images";
-mkdirSync(OUT, { recursive: true });
 
 const IMAGE_EXT = new Set([".png", ".jpg", ".jpeg", ".webp", ".gif", ".avif"]);
 const files = new Map();
@@ -34,14 +33,12 @@ for (const g of gifts) {
     if (g.image.startsWith("http")) missing.push(g.slug);
     continue;
   }
-  const target = `${g.slug}${extname(file).toLowerCase()}`;
-  copyFileSync(join(dir, file), join(OUT, target));
-  g.image = `/images/${target}`;
+  g.image = await writeGiftImage(join(dir, file), g.slug);
   copied++;
 }
 
 writeFileSync(DATA, JSON.stringify(gifts, null, 2) + "\n");
-console.log(`copied ${copied} of ${gifts.length} images into ${OUT}/`);
+console.log(`wrote ${copied} of ${gifts.length} images into ${OUT}/ as webp`);
 if (missing.length) {
   console.log(`${missing.length} gifts still use Framer-hosted images:`);
   console.log("  " + missing.join("\n  "));

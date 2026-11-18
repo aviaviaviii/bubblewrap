@@ -1,28 +1,22 @@
 // Downloads every gift image from framerusercontent.com into public/images/
+// (800px webp, via lib/gift-image.mjs)
 // and points src/data/gifts.json at the local copies, so the site no longer
 // depends on Framer once the old project is cancelled.
 // Usage: node scripts/download-images.mjs
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
-import { extname } from "node:path";
+import { readFileSync, writeFileSync } from "node:fs";
+import { writeGiftImage } from "./lib/gift-image.mjs";
 
 const DATA = "src/data/gifts.json";
-const DIR = "public/images";
-mkdirSync(DIR, { recursive: true });
 
 const gifts = JSON.parse(readFileSync(DATA, "utf8"));
 let done = 0, failed = 0;
 
 async function fetchOne(g) {
   if (!g.image.startsWith("http")) return;
-  const ext = extname(new URL(g.image).pathname) || ".jpg";
-  const file = `${g.slug}${ext}`;
-  if (!existsSync(`${DIR}/${file}`)) {
-    // Framer serves resized variants; 800px wide is plenty for 220px cards at 3x.
-    const res = await fetch(`${g.image}?width=800`);
-    if (!res.ok) throw new Error(`${res.status} ${g.image}`);
-    writeFileSync(`${DIR}/${file}`, Buffer.from(await res.arrayBuffer()));
-  }
-  g.image = `/images/${file}`;
+  // Framer serves resized variants; ask for 800px and let gift-image.mjs make the webp.
+  const res = await fetch(`${g.image}?width=800`);
+  if (!res.ok) throw new Error(`${res.status} ${g.image}`);
+  g.image = await writeGiftImage(Buffer.from(await res.arrayBuffer()), g.slug);
 }
 
 const queue = [...gifts];

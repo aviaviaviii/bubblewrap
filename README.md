@@ -59,6 +59,6 @@ npm run import:framer   # reads data/framer-collection.csv and rewrites src/data
 
 ## Before switching the domain off Framer
 
-1. **Images:** done for gifts. All 409 now load from `public/images/` as 800px webp, made from the PullPage asset export with `npm run images:import -- "<export folder>"`. Two other routes still work: `npm run images:local -- ~/Downloads` copies loose files named by Framer image id or slug (as is, not resized to webp), and `npm run images:download` fetches from Framer's CDN. The favicon and OG image are in `public/` too, so nothing loads from Framer anymore.
+1. **Images:** done for gifts. All 409 now load from `public/images/` as 800px webp, made from the PullPage asset export with `npm run images:import -- "<export folder>"`. Two other routes give the same result: `npm run images:local -- ~/Downloads` for loose files named by Framer image id or slug, and `npm run images:download` to fetch from Framer's CDN. All three write through `scripts/lib/gift-image.mjs`. The favicon and OG image are in `public/` too, so nothing loads from Framer anymore.
 2. **Newsletter:** the Framer form posted through Framer's own backend. Set `PUBLIC_NEWSLETTER_ACTION` to your email provider's form endpoint (the field is named `email`). Until it's set, the button only says "Soon!".
 3. **Deploy:** works on any static host. On Vercel, import the repo; `vercel.json` already turns on clean URLs (`/live`, not `/live.html`).
