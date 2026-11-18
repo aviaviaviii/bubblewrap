@@ -20,9 +20,11 @@
 // Show/Hide on the password: typing a long password blind on a phone is where the
 // "Wrong password" mix-ups came from.
 // Above the list: search (title and tags), status and tag filters, and a sort menu.
-// Sort is a menu, not clickable column headers: the headers are gone on phones, so
-// headers would have meant two sort controls. The choices survive going in and out of
-// an edit page (they live in memory, reset on reload or Lock).
+// Sorting: the Title, Status, Price and Date headers are clickable (click again to
+// reverse), and the Sort menu does the same. They're one control, not two: a header
+// click just sets the menu, so they can't disagree. The menu stays because the headers
+// are gone on phones. Image and Tags don't sort; neither has a useful order.
+// The choices survive going in and out of an edit page (in memory, reset on reload or Lock).
 // Thumbnails open the full image in a <dialog> (Escape, the close button or a click
 // outside closes it), above the row's click-to-edit area.
 // Delete lives at the bottom of the edit page only, as a two-step: "Delete gift" swaps
@@ -82,18 +84,20 @@ import { site } from "../site.config";
           <option value="old">Oldest</option>
           <option value="price-desc">Price, high to low</option>
           <option value="price-asc">Price, low to high</option>
+          <option value="live">Live first</option>
           <option value="title">Title, A to Z</option>
+          <option value="title-desc">Title, Z to A</option>
         </select>
       </div>
       <p class="empty" id="empty" hidden>No gifts match. <button type="button" class="text-button" id="clear">Clear</button></p>
       <div class="table" role="table" aria-label="Gifts">
         <div class="row head" role="row">
           <span role="columnheader" class="c-img"><span class="sr">Image</span></span>
-          <span role="columnheader" class="c-title">Title</span>
-          <span role="columnheader" class="c-status">Status</span>
-          <span role="columnheader" class="c-price">Price</span>
+          <span role="columnheader" class="c-title"><button type="button" class="sort-head" data-col="title">Title<span class="sort-mark" aria-hidden="true"></span></button></span>
+          <span role="columnheader" class="c-status"><button type="button" class="sort-head" data-col="status">Status<span class="sort-mark" aria-hidden="true"></span></button></span>
+          <span role="columnheader" class="c-price"><button type="button" class="sort-head" data-col="price">Price<span class="sort-mark" aria-hidden="true"></span></button></span>
           <span role="columnheader" class="c-tags">Tags</span>
-          <span role="columnheader" class="c-date">Date</span>
+          <span role="columnheader" class="c-date"><button type="button" class="sort-head" data-col="date">Date<span class="sort-mark" aria-hidden="true"></span></button></span>
         </div>
         <div id="rows" role="rowgroup"></div>
       </div>
@@ -283,7 +287,9 @@ import { site } from "../site.config";
         old: (a, b) => Number(!a.date) - Number(!b.date) || -byDate(a, b),
         "price-desc": (a, b) => b.price - a.price,
         "price-asc": (a, b) => a.price - b.price,
+        live: (a, b) => Number(a.draft) - Number(b.draft) || byDate(a, b),
         title: (a, b) => a.title.localeCompare(b.title, "en", { sensitivity: "base" }),
+        "title-desc": (a, b) => b.title.localeCompare(a.title, "en", { sensitivity: "base" }),
       };
 
       function tagOptions() {
@@ -293,7 +299,36 @@ import { site } from "../site.config";
         fTag.value = tags.includes(keep) ? keep : "";
       }
 
+      // Each sortable header: its first click, then the reverse, and which way each runs
+      // (for the arrow and aria-sort).
+      const heads: Record<string, [string, string]> = {
+        title: ["title", "title-desc"],
+        status: ["drafts", "live"],
+        price: ["price-desc", "price-asc"],
+        date: ["new", "old"],
+      };
+      const ascending = new Set(["title", "live", "price-asc", "old"]);
+
+      function markHeads() {
+        for (const b of document.querySelectorAll<HTMLButtonElement>(".sort-head")) {
+          const active = heads[b.dataset.col!].includes(sortBy.value);
+          const up = ascending.has(sortBy.value);
+          $<HTMLElement>(".sort-mark", b).textContent = active ? (up ? " ↑" : " ↓") : "";
+          b.parentElement!.setAttribute("aria-sort", active ? (up ? "ascending" : "descending") : "none");
+          b.classList.toggle("active", active);
+        }
+      }
+
+      for (const b of document.querySelectorAll<HTMLButtonElement>(".sort-head")) {
+        b.addEventListener("click", () => {
+          const [first, second] = heads[b.dataset.col!];
+          sortBy.value = sortBy.value === first ? second : first;
+          renderList();
+        });
+      }
+
       function renderList() {
+        markHeads();
         tagOptions();
         const term = q.value.trim().toLowerCase();
         const shown = gifts
@@ -669,6 +704,8 @@ import { site } from "../site.config";
         border-top: 1px solid color-mix(in srgb, var(--fg) 12%, transparent);
       }
       .row.head { color: var(--muted); font-size: 12px; padding-top: 0; padding-bottom: 8px; border-top: 0; }
+      .sort-head { font: inherit; color: inherit; padding: 4px 0; border: 0; background: none; cursor: pointer; text-align: left; }
+      .sort-head:hover, .sort-head.active { color: var(--fg); }
       .row:not(.head):hover { background: color-mix(in srgb, var(--fg) 5%, transparent); }
       .c-img img { width: 48px; height: 52px; object-fit: contain; display: block; }
       .thumb { position: relative; z-index: 1; padding: 0; border: 0; background: none; cursor: zoom-in; display: block; }
