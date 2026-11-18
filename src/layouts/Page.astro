@@ -26,28 +26,37 @@ const marqueeItems = [...site.marquee, ...site.marquee];
 
     <header class="header">
       <HeaderDots />
-      <nav class="nav">
-        <ul class="nav-tags">
-          <li><a href="/" aria-current={!activeTag ? "page" : undefined}>ALL</a></li>
-          {
-            site.navTags.map((t) => (
-              <li>
-                <a href={`/${t}`} aria-current={activeTag === t ? "page" : undefined}>
-                  {t.toUpperCase()}
-                </a>
-              </li>
-            ))
-          }
-        </ul>
-        <ul class="nav-right">
-          <li><button type="button" class="theme-toggle" id="theme-toggle">NIGHT</button></li>
-          <li><a href={site.author.href} target="_blank" rel="noopener">{site.author.label}<span class="arrow"> ↗</span></a></li>
-        </ul>
-      </nav>
       <h1 class="logo">
         <a href="/"><span class="logo-full">bubble—wrap</span><span class="logo-short">b-w</span></a>
       </h1>
     </header>
+
+    {/* The nav sticks to the top while the logo and dot field scroll away.
+        It sits after the header, not inside it, because sticky only holds within
+        its parent and the header is 207px tall. On desktop CSS pulls it back up
+        over the header's top row, so at rest nothing moves. The sentinel marks
+        where the nav rests; once that scrolls past, .is-stuck gives the bar a
+        solid background so cards don't show through, and the dots stay visible
+        at rest. */}
+    <div class="nav-sentinel" aria-hidden="true"></div>
+    <nav class="nav">
+      <ul class="nav-tags">
+        <li><a href="/" aria-current={!activeTag ? "page" : undefined}>ALL</a></li>
+        {
+          site.navTags.map((t) => (
+            <li>
+              <a href={`/${t}`} aria-current={activeTag === t ? "page" : undefined}>
+                {t.toUpperCase()}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+      <ul class="nav-right">
+        <li><button type="button" class="theme-toggle" id="theme-toggle">NIGHT</button></li>
+        <li><a href={site.author.href} target="_blank" rel="noopener">{site.author.label}<span class="arrow"> ↗</span></a></li>
+      </ul>
+    </nav>
 
     <main>
       <slot />
@@ -75,6 +84,20 @@ const marqueeItems = [...site.marquee, ...site.marquee];
             ? root.dataset.theme === "dark"
             : matchMedia("(prefers-color-scheme: dark)").matches;
         const sync = () => (btn.textContent = isDark() ? "DAY" : "NIGHT");
+
+        // Sticky nav: solid only once it is actually stuck.
+        const nav = document.querySelector(".nav");
+        const sentinel = document.querySelector(".nav-sentinel");
+        let queued = false;
+        const stick = () => {
+          queued = false;
+          nav.classList.toggle("is-stuck", sentinel.getBoundingClientRect().top < 0);
+        };
+        addEventListener("scroll", () => {
+          if (!queued) { queued = true; requestAnimationFrame(stick); }
+        }, { passive: true });
+        addEventListener("resize", stick);
+        stick();
         sync();
         btn.addEventListener("click", () => {
           root.dataset.theme = isDark() ? "light" : "dark";
