@@ -102,7 +102,11 @@ ul { list-style: none; margin: 0; padding: 0; }
   background-image: radial-gradient(circle, var(--dot) 1px, transparent 1.5px);
   background-size: 51px 51px;
   background-position: -24.5px -3px;
+  position: relative;
 }
+/* The static pattern above is the no-JS fallback; HeaderDots draws the live one. */
+.header.has-dots { background-image: none; }
+.nav, .logo { position: relative; z-index: 1; }
 .nav {
   display: flex;
   justify-content: space-between;

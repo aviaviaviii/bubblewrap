@@ -1,6 +1,7 @@
 ---
 import { site } from "../site.config";
 import Head from "../components/Head.astro";
+import HeaderDots from "../components/HeaderDots.astro";
 
 interface Props {
   title?: string;
@@ -24,6 +25,7 @@ const marqueeItems = [...site.marquee, ...site.marquee];
     <p class="intro">{site.intro}</p>
 
     <header class="header">
+      <HeaderDots />
       <nav class="nav">
         <ul class="nav-tags">
           <li><a href="/" aria-current={!activeTag ? "page" : undefined}>ALL</a></li>

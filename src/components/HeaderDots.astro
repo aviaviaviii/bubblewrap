@@ -1,0 +1,106 @@
+---
+// The header's dot field, which shies away from the cursor. A port of the live
+// Framer header, a p5.js grid component in its "Amplifiers" mode. Its settings
+// were read from the live component's props and its drawing checked against the
+// live canvas pixels:
+//   50 x 4 dots, 51px pitch, 20px padding, on a 2540 x 194 canvas centred on the header
+//   repel: pushed up to 50px away, fading to 0 at 200px from the cursor
+//   scale: 1.5x under the cursor down to 0.5x at 200px+ (0.5x = the 1.5px resting dot)
+//   moves instantly on pointer move; dots stay where the cursor last left them
+// Written as plain canvas instead of p5 (~1MB) since 200 dots need nothing more.
+// Not copied from live: in dark mode live draws black dots on the dark page (they
+// vanish); here they use --dot like the rest of the theme.
+// The static CSS pattern on .header stays as the fallback; .has-dots hides it once
+// this canvas is drawing. Hidden on phones, where the header has no dots.
+---
+
+<div class="header-dots" aria-hidden="true"><canvas></canvas></div>
+
+<script>
+  const COLS = 50, ROWS = 4, PITCH = 51, PAD = 20.5;
+  const W = 2540, H = 194;
+  const REPEL = { distance: 200, force: 50 };
+  const SCALE = { distance: 200, max: 1.5, min: 0.5 };
+  const DOT = 3; // diameter at scale 1
+
+  const header = document.querySelector(".header");
+  const canvas = document.querySelector<HTMLCanvasElement>(".header-dots canvas");
+  const ctx = canvas?.getContext("2d");
+
+  if (header && canvas && ctx) {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    ctx.scale(dpr, dpr);
+
+    const dots: { ox: number; oy: number }[] = [];
+    for (let c = 0; c < COLS; c++)
+      for (let r = 0; r < ROWS; r++) dots.push({ ox: PAD + c * PITCH, oy: PAD + r * PITCH });
+
+    // Same as p5's map(value, 0, distance, from, to, clamp)
+    const map = (d: number, dist: number, from: number, to: number) =>
+      from + (to - from) * Math.min(d / dist, 1);
+
+    let mx = -99999, my = -99999; // far away = every dot at rest
+    let queued = false;
+
+    const draw = () => {
+      queued = false;
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = getComputedStyle(header).getPropertyValue("--dot").trim() || "#000";
+      for (const d of dots) {
+        const dx = mx - d.ox, dy = my - d.oy;
+        const dist = Math.hypot(dx, dy) || 0.0001;
+        const push = map(dist, REPEL.distance, REPEL.force, 0);
+        const x = d.ox - (dx / dist) * push;
+        const y = d.oy - (dy / dist) * push;
+        const r = (DOT / 2) * map(dist, SCALE.distance, SCALE.max, SCALE.min);
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    };
+    const redraw = () => { if (!queued) { queued = true; requestAnimationFrame(draw); } };
+
+    draw();
+    header.classList.add("has-dots");
+
+    if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      window.addEventListener("pointermove", (e) => {
+        if (e.pointerType !== "mouse") return;
+        const rect = canvas.getBoundingClientRect();
+        mx = e.clientX - rect.left;
+        my = e.clientY - rect.top;
+        redraw();
+      }, { passive: true });
+    }
+
+    // Repaint in the new colour when the theme changes
+    new MutationObserver(redraw).observe(document.documentElement, { attributeFilter: ["data-theme"] });
+    matchMedia("(prefers-color-scheme: dark)").addEventListener("change", redraw);
+  }
+</script>
+
+<style>
+  .header-dots {
+    position: absolute;
+    z-index: 0;
+    top: 2px;
+    left: calc(-1 * var(--gutter));
+    right: calc(-1 * var(--gutter));
+    height: 194px;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .header-dots canvas {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 2540px;
+    height: 194px;
+    transform: translateX(-50%);
+  }
+  @media (max-width: 809.98px) {
+    .header-dots { display: none; }
+  }
+</style>
