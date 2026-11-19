@@ -3007,13 +3007,13 @@
     "imageAlt": "Bento Classic",
     "price": 1699,
     "tags": [
-      "cook",
-      "live"
+      "live",
+      "cook"
     ],
     "date": "2024-11-22",
     "link": "https://yourbasil.com/products/bento-classic-black",
     "description": "",
-    "draft": false
+    "draft": true
   },
   {
     "slug": "radio-sling",
