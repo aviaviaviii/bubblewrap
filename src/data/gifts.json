@@ -5514,13 +5514,13 @@
     "imageAlt": "Sili bottle",
     "price": 699,
     "tags": [
-      "cook",
-      "live"
+      "live",
+      "cook"
     ],
     "date": "2026-02-02",
     "link": "https://www.stotodo.com/products/silicone-water-bottle",
     "description": "",
-    "draft": false
+    "draft": true
   },
   {
     "slug": "crinkle-stripe-tote",
