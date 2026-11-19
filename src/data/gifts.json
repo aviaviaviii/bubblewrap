@@ -4143,13 +4143,13 @@
     "imageAlt": "Personalise Handcrafted Freddie School Bag",
     "price": 1095,
     "tags": [
-      "wear",
-      "live"
+      "live",
+      "wear"
     ],
     "date": "2025-05-18",
     "link": "https://zoey.in/products/playful-freddie-handcrafted-sustainable-cotton-school-backpack-toddler-bag",
     "description": "",
-    "draft": false
+    "draft": true
   },
   {
     "slug": "double-baked-black-handmadeterracotta-clay-bottle-800ml-with-cork-and-wooden-lid",
