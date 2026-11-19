@@ -1817,13 +1817,13 @@
     "price": 650,
     "tags": [
       "live",
-      "read",
-      "play"
+      "play",
+      "read"
     ],
     "date": "2023-08-24",
     "link": "https://mymuse.in/products/the-couples-play-book",
     "description": "bring you and your partner closer",
-    "draft": false
+    "draft": true
   },
   {
     "slug": "yoga-for-stiff-birds",
