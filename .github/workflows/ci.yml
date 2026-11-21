@@ -31,10 +31,6 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  # Vercel's runtime for the /admin function.
-  NODE_VERSION: 24
-
 jobs:
   changes:
     name: What changed
@@ -77,7 +73,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
-        with: { node-version: "${{ env.NODE_VERSION }}", cache: npm }
+        with: { node-version-file: .nvmrc, cache: npm }
       - run: npm ci
       - run: npm run check
 
@@ -88,7 +84,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
-        with: { node-version: "${{ env.NODE_VERSION }}", cache: npm }
+        with: { node-version-file: .nvmrc, cache: npm }
       - run: npm ci
       - run: npm run test:coverage
       - uses: actions/upload-artifact@v7
@@ -105,7 +101,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
-        with: { node-version: "${{ env.NODE_VERSION }}", cache: npm }
+        with: { node-version-file: .nvmrc, cache: npm }
       - run: npm ci
       - run: npm run build
       - run: npm run test:build
@@ -129,7 +125,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
-        with: { node-version: "${{ env.NODE_VERSION }}", cache: npm }
+        with: { node-version-file: .nvmrc, cache: npm }
       - run: npm ci
       - uses: actions/download-artifact@v8
         with:
@@ -161,7 +157,7 @@ jobs:
         with:
           fetch-depth: 0 # the secret scan reads every commit, not just the last one
       - uses: actions/setup-node@v7
-        with: { node-version: "${{ env.NODE_VERSION }}", cache: npm }
+        with: { node-version-file: .nvmrc, cache: npm }
 
       # Critical advisories in what ships fail the build. High ones are reported as a
       # warning: today they're all inside Astro's and Vercel's build tooling (picomatch,
