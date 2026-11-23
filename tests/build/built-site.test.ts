@@ -158,13 +158,19 @@ describe.skipIf(!built)("built site", () => {
     expect(csp).toMatch(/frame-ancestors 'none'/);
     expect(csp).toMatch(/upgrade-insecure-requests/);
 
-    // The adapter copies vercel.json into the output config, which is what Vercel ships.
+    // The post-build script copies the vercel.json headers into the output
+    // config, which is what Vercel ships. The adapter does not do this itself.
     const out = JSON.parse(readFileSync(".vercel/output/config.json", "utf8"));
-    const shipped = JSON.stringify(out);
-    expect(shipped).toContain("X-Content-Type-Options");
-    expect(shipped).toContain("nosniff");
-    expect(shipped).toContain("Content-Security-Policy");
-    expect(shipped).toContain("https://script.google.com");
+    const routes = out.routes as { src?: string; handle?: string; headers?: Record<string, string>; continue?: boolean }[];
+    const headerAt = routes.findIndex((r) => r.src === "^/(.*)$" && r.headers?.["Content-Security-Policy"]);
+    const fsAt = routes.findIndex((r) => r.handle === "filesystem");
+    const apiAt = routes.findIndex((r) => r.src === "^/api/gift$");
+    expect(headerAt).toBeGreaterThanOrEqual(0);
+    expect(routes[headerAt].continue).toBe(true);
+    expect(routes[headerAt].headers?.["X-Content-Type-Options"]).toBe("nosniff");
+    expect(routes[headerAt].headers?.["Content-Security-Policy"]).toContain("https://script.google.com");
+    expect(fsAt).toBeGreaterThan(headerAt);
+    expect(apiAt).toBeGreaterThan(headerAt);
   });
 
   it("pages stay light: no HTML page over 600KB, no image over 1MB", () => {
