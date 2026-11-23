@@ -5,6 +5,7 @@ Source for [bubblewrap.in](https://bubblewrap.in): gifts that feel like art. It 
 ## Develop
 
 ```bash
+nvm use          # or install Node 24 another way
 npm install
 npm run dev      # http://localhost:4321
 npm run build    # static output in dist/
