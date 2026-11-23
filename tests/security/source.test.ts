@@ -98,3 +98,16 @@ describe("no third-party requests from pages", () => {
     for (const f of source) expect(read(f), f).not.toMatch(/<script[^>]+src="https?:/);
   });
 });
+
+
+describe("security headers", () => {
+  it("are declared for every route in vercel.json", () => {
+    const cfg = JSON.parse(read("vercel.json"));
+    const keys = new Set(
+      (cfg.headers ?? []).flatMap((h: { headers: { key: string }[] }) => h.headers.map((x) => x.key)),
+    );
+    for (const k of ["Content-Security-Policy", "X-Content-Type-Options", "X-Frame-Options", "Referrer-Policy", "Permissions-Policy"]) {
+      expect(keys.has(k), k).toBe(true);
+    }
+  });
+});

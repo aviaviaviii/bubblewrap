@@ -137,6 +137,36 @@ describe.skipIf(!built)("built site", () => {
     expect(JSON.parse(readFileSync("vercel.json", "utf8"))).toMatchObject({ cleanUrls: true, trailingSlash: false });
   });
 
+  it("sends security headers on every route", () => {
+    const cfg = JSON.parse(readFileSync("vercel.json", "utf8"));
+    const headers = Object.fromEntries(
+      (cfg.headers ?? [])
+        .filter((h: { source: string }) => h.source === "/(.*)")
+        .flatMap((h: { headers: { key: string; value: string }[] }) => h.headers.map((x) => [x.key, x.value])),
+    );
+    expect(headers["X-Content-Type-Options"]).toBe("nosniff");
+    expect(headers["X-Frame-Options"]).toBe("DENY");
+    expect(headers["Referrer-Policy"]).toBe("strict-origin-when-cross-origin");
+    expect(headers["Permissions-Policy"]).toMatch(/camera=\(\)/);
+    expect(headers["Permissions-Policy"]).toMatch(/microphone=\(\)/);
+    expect(headers["Permissions-Policy"]).toMatch(/geolocation=\(\)/);
+    const csp = headers["Content-Security-Policy"] as string;
+    expect(csp).toMatch(/script-src[^;]*'self'/);
+    expect(csp).toContain("https://*.i.posthog.com");
+    expect(csp).toContain("https://script.google.com");
+    expect(csp).toContain("https://script.googleusercontent.com");
+    expect(csp).toMatch(/frame-ancestors 'none'/);
+    expect(csp).toMatch(/upgrade-insecure-requests/);
+
+    // The adapter copies vercel.json into the output config, which is what Vercel ships.
+    const out = JSON.parse(readFileSync(".vercel/output/config.json", "utf8"));
+    const shipped = JSON.stringify(out);
+    expect(shipped).toContain("X-Content-Type-Options");
+    expect(shipped).toContain("nosniff");
+    expect(shipped).toContain("Content-Security-Policy");
+    expect(shipped).toContain("https://script.google.com");
+  });
+
   it("pages stay light: no HTML page over 600KB, no image over 1MB", () => {
     for (const path of publicPages) expect(Buffer.byteLength(html(path)), path).toBeLessThan(600 * 1024);
     const big = walk(join(OUT, "images")).filter((f) => statSync(f).size > 1024 * 1024);

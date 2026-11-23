@@ -6,7 +6,7 @@
   "description": "bubble—wrap · gifts that feel like art (bubblewrap.in)",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "astro build && node scripts/apply-security-headers.mjs",
     "preview": "astro preview",
     "gift": "node scripts/add-gift.mjs",
     "images:local": "node scripts/use-local-images.mjs",

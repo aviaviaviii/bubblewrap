@@ -6,11 +6,12 @@ import sharp from "sharp";
 import { POST } from "../../src/pages/api/gift";
 import { adminRequest, fakeGitHub, gift, png, sampleGifts, tempProject } from "../helpers/fixtures";
 import { today } from "../../src/lib/gift-core.mjs";
+import { FAIL_LIMIT, resetAdminLockout } from "../../src/lib/admin-lockout";
 
 const PASS = "correct horse battery staple";
-const call = async (fields: Parameters<typeof adminRequest>[0], file?: Parameters<typeof adminRequest>[1]) => {
-  const res = await POST({ request: adminRequest(fields, file) } as never);
-  return { status: res.status, type: res.headers.get("content-type"), body: (await res.json()) as Record<string, any> };
+const call = async (fields: Parameters<typeof adminRequest>[0], file?: Parameters<typeof adminRequest>[1], headers?: HeadersInit) => {
+  const res = await POST({ request: adminRequest(fields, file, headers) } as never);
+  return { status: res.status, type: res.headers.get("content-type"), retryAfter: res.headers.get("Retry-After"), body: (await res.json()) as Record<string, any> };
 };
 const withPass = (fields: Record<string, string | string[]> = {}) => ({ password: PASS, ...fields });
 const newGift = { title: "Moon Lamp", price: "2499", tags: ["live", "play"], link: "https://shop.example/moon", status: "live", date: "2026-11-18" };
@@ -29,6 +30,7 @@ beforeEach(() => {
 afterEach(() => {
   process.chdir(cwd);
   project.cleanup();
+  resetAdminLockout();
   vi.unstubAllEnvs();
   vi.unstubAllGlobals();
   vi.useRealTimers();
@@ -46,7 +48,7 @@ describe("password gate", () => {
     const t = Date.now();
     const r = await call({ password: "nope", action: "list" });
     expect(Date.now() - t).toBeGreaterThanOrEqual(900);
-    expect(r).toEqual({ status: 401, type: "application/json", body: { error: "Wrong password" } });
+    expect(r).toEqual({ status: 401, type: "application/json", retryAfter: null, body: { error: "Wrong password" } });
   });
 
   it("401 when the password is missing", async () => {
@@ -76,6 +78,38 @@ describe("password gate", () => {
   it("checks the password before reading the action", async () => {
     const r = await call({ password: "nope", action: "explode" });
     expect(r.status).toBe(401);
+  });
+});
+
+describe("password lockout", () => {
+  const ip = { "x-real-ip": "203.0.113.10" };
+  const other = { "x-real-ip": "203.0.113.11" };
+  const fail = () => call({ password: "nope", action: "list" }, undefined, ip);
+
+  it("locks that IP after five wrong passwords, including a later correct one", async () => {
+    for (let i = 0; i < FAIL_LIMIT; i++) expect((await fail()).status).toBe(401);
+    const locked = await call(withPass({ action: "list" }), undefined, ip);
+    expect(locked).toMatchObject({ status: 429, retryAfter: "900", body: { error: "Too many wrong passwords. Try again in 15 minutes" } });
+  });
+
+  it("does not lock a different IP", async () => {
+    for (let i = 0; i < FAIL_LIMIT; i++) expect((await fail()).status).toBe(401);
+    const r = await call(withPass({ action: "list" }), undefined, other);
+    expect(r.status).toBe(200);
+  });
+
+  it("clears the count after a correct password, so later typos do not inherit it", async () => {
+    for (let i = 0; i < FAIL_LIMIT - 1; i++) expect((await fail()).status).toBe(401);
+    expect((await call(withPass({ action: "list" }), undefined, ip)).status).toBe(200);
+    expect((await fail()).status).toBe(401);
+    expect((await call(withPass({ action: "list" }), undefined, ip)).status).toBe(200);
+  });
+
+  it("does not delay a correct password when the IP is not locked", async () => {
+    const t = Date.now();
+    const r = await call(withPass({ action: "list" }), undefined, ip);
+    expect(r.status).toBe(200);
+    expect(Date.now() - t).toBeLessThan(900);
   });
 });
 
