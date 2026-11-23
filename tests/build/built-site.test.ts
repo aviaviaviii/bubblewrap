@@ -137,6 +137,42 @@ describe.skipIf(!built)("built site", () => {
     expect(JSON.parse(readFileSync("vercel.json", "utf8"))).toMatchObject({ cleanUrls: true, trailingSlash: false });
   });
 
+  it("sends security headers on every route", () => {
+    const cfg = JSON.parse(readFileSync("vercel.json", "utf8"));
+    const headers = Object.fromEntries(
+      (cfg.headers ?? [])
+        .filter((h: { source: string }) => h.source === "/(.*)")
+        .flatMap((h: { headers: { key: string; value: string }[] }) => h.headers.map((x) => [x.key, x.value])),
+    );
+    expect(headers["X-Content-Type-Options"]).toBe("nosniff");
+    expect(headers["X-Frame-Options"]).toBe("DENY");
+    expect(headers["Referrer-Policy"]).toBe("strict-origin-when-cross-origin");
+    expect(headers["Permissions-Policy"]).toMatch(/camera=\(\)/);
+    expect(headers["Permissions-Policy"]).toMatch(/microphone=\(\)/);
+    expect(headers["Permissions-Policy"]).toMatch(/geolocation=\(\)/);
+    const csp = headers["Content-Security-Policy"] as string;
+    expect(csp).toMatch(/script-src[^;]*'self'/);
+    expect(csp).toContain("https://*.i.posthog.com");
+    expect(csp).toContain("https://script.google.com");
+    expect(csp).toContain("https://script.googleusercontent.com");
+    expect(csp).toMatch(/frame-ancestors 'none'/);
+    expect(csp).toMatch(/upgrade-insecure-requests/);
+
+    // The post-build script copies the vercel.json headers into the output
+    // config, which is what Vercel ships. The adapter does not do this itself.
+    const out = JSON.parse(readFileSync(".vercel/output/config.json", "utf8"));
+    const routes = out.routes as { src?: string; handle?: string; headers?: Record<string, string>; continue?: boolean }[];
+    const headerAt = routes.findIndex((r) => r.src === "^/(.*)$" && r.headers?.["Content-Security-Policy"]);
+    const fsAt = routes.findIndex((r) => r.handle === "filesystem");
+    const apiAt = routes.findIndex((r) => r.src === "^/api/gift$");
+    expect(headerAt).toBeGreaterThanOrEqual(0);
+    expect(routes[headerAt].continue).toBe(true);
+    expect(routes[headerAt].headers?.["X-Content-Type-Options"]).toBe("nosniff");
+    expect(routes[headerAt].headers?.["Content-Security-Policy"]).toContain("https://script.google.com");
+    expect(fsAt).toBeGreaterThan(headerAt);
+    expect(apiAt).toBeGreaterThan(headerAt);
+  });
+
   it("pages stay light: no HTML page over 600KB, no image over 1MB", () => {
     for (const path of publicPages) expect(Buffer.byteLength(html(path)), path).toBeLessThan(600 * 1024);
     const big = walk(join(OUT, "images")).filter((f) => statSync(f).size > 1024 * 1024);

@@ -38,15 +38,16 @@ export function tempProject(gifts = sampleGifts()) {
 }
 
 /** Builds the multipart request /admin sends. */
-export function adminRequest(fields: Record<string, string | string[] | Blob>, file?: { name: string; data: Buffer; type?: string }) {
+export function adminRequest(fields: Record<string, string | string[] | Blob>, file?: { name: string; data: Buffer; type?: string }, headers?: HeadersInit) {
   const fd = new FormData();
   for (const [k, v] of Object.entries(fields)) {
     if (Array.isArray(v)) v.forEach((x) => fd.append(k, x));
     else fd.set(k, v);
   }
   if (file) fd.set("image", new File([new Uint8Array(file.data)], file.name, { type: file.type ?? "image/png" }));
-  return new Request("http://localhost/api/gift", { method: "POST", body: fd });
+  return new Request("http://localhost/api/gift", { method: "POST", body: fd, headers });
 }
+
 
 /**
  * Just enough of GitHub's git data API for the admin's GitHub store:

@@ -27,6 +27,7 @@
 import type { APIRoute } from "astro";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { makeGift, encodeGiftImage, today } from "../../lib/gift-core.mjs";
+import { clientIp, isAdminLocked, recordAdminFailure, clearAdminFailures } from "../../lib/admin-lockout";
 
 export const prerender = false;
 
@@ -38,8 +39,8 @@ type Gift = { slug: string; title: string; image: string; price: number; tags: s
 // A file with content null is removed (delete takes the gift's image away with it).
 type Change = { gifts: Gift[]; files?: { path: string; content: Buffer | null }[]; message: string; result: object };
 
-const json = (status: number, body: object) =>
-  new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
+const json = (status: number, body: object, extra: Record<string, string> = {}) =>
+  new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json", ...extra } });
 
 // A problem with what was asked (shown to the person as is), as opposed to a crash.
 class GiftError extends Error {}
@@ -64,10 +65,20 @@ export const POST: APIRoute = async ({ request }) => {
     return json(400, { error: "That didn't come through. Try again" });
   }
 
+  // Per-IP lockout plus the 1s delay on a wrong password. The delay alone does
+  // not stop parallel guessing; the lockout does, inside this instance. A
+  // correct password is unchanged when the IP is not locked.
+  const ip = clientIp(request);
+  if (isAdminLocked(ip)) {
+    return json(429, { error: "Too many wrong passwords. Try again in 15 minutes" }, { "Retry-After": "900" });
+  }
+
   if (!passwordMatches(String(form.get("password") ?? ""), expected)) {
+    recordAdminFailure(ip);
     await new Promise((r) => setTimeout(r, 1000)); // slows down guessing
     return json(401, { error: "Wrong password" });
   }
+  clearAdminFailures(ip);
 
   let store: Store;
   try {
