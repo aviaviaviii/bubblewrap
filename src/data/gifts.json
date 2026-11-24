@@ -1,5 +1,19 @@
 [
   {
+    "slug": "aam-papad-strips",
+    "title": "Aam Papad Strips",
+    "image": "/images/aam-papad-strips.webp",
+    "imageAlt": "Aam Papad Strips",
+    "price": 249,
+    "tags": [
+      "cook"
+    ],
+    "date": "2026-11-24",
+    "link": "https://pistabarfi.com/products/puma-x-pistabarfi-aam-papad-strips",
+    "description": "",
+    "draft": false
+  },
+  {
     "slug": "hand-embroidered-rainbow-diaper-bag",
     "title": "Hand Embroidered Rainbow Diaper Bag",
     "image": "/images/hand-embroidered-rainbow-diaper-bag.webp",
@@ -2469,7 +2483,7 @@
     "date": "2023-10-09",
     "link": "https://pistabarfi.com/products/pistabarfi?_pos=1&_sid=17ca89697&_ss=r",
     "description": "nostalgia branded",
-    "draft": false
+    "draft": true
   },
   {
     "slug": "multicolour-kumkum-bindis-spiral-notebook",
