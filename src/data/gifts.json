@@ -1,5 +1,19 @@
 [
   {
+    "slug": "sunflower-craft-notebook-applique",
+    "title": "Sunflower Craft Notebook - Applique",
+    "image": "/images/sunflower-craft-notebook-applique.webp",
+    "imageAlt": "Sunflower Craft Notebook - Applique",
+    "price": 680,
+    "tags": [
+      "read"
+    ],
+    "date": "2026-11-24",
+    "link": "https://www.kissagoi.com/products/sunflower-patchwork-craft-notebook-applique",
+    "description": "",
+    "draft": false
+  },
+  {
     "slug": "almond-dragees-jar",
     "title": "Almond Dragees Jar",
     "image": "/images/almond-dragees-jar.webp",
