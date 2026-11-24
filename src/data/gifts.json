@@ -1,5 +1,19 @@
 [
   {
+    "slug": "kombucha-classic-original-500ml",
+    "title": "Kombucha-Classic Original 500ml",
+    "image": "/images/kombucha-classic-original-500ml.webp",
+    "imageAlt": "Kombucha-Classic Original 500ml",
+    "price": 260,
+    "tags": [
+      "cook"
+    ],
+    "date": "2026-11-24",
+    "link": "https://bombucha.in/products/kombucha-classic-original-500ml",
+    "description": "",
+    "draft": false
+  },
+  {
     "slug": "clara-black",
     "title": "Clara - Black",
     "image": "/images/clara-black.webp",
@@ -3775,7 +3789,7 @@
     "date": "2025-04-05",
     "link": "https://bombucha.in/products/mango-habanero-hot-sauce-230g-blr",
     "description": "",
-    "draft": false
+    "draft": true
   },
   {
     "slug": "chocolate-caramel-toffee",
