@@ -1,5 +1,219 @@
 [
   {
+    "slug": "wine-red-whistling-kettle-16-liters-cotton-series",
+    "title": "Wine Red Whistling Kettle (1.6 Liters) Cotton Series",
+    "image": "/images/wine-red-whistling-kettle-16-liters-cotton-series.webp",
+    "imageAlt": "Wine Red Whistling Kettle (1.6 Liters) Cotton Series",
+    "price": 3595,
+    "tags": [
+      "cook"
+    ],
+    "date": "2023-09-05",
+    "link": "https://fujihoroindia.com/products/red-whistling-kettle-1-6-ltrs",
+    "description": "",
+    "draft": false
+  },
+  {
+    "slug": "blank-notepad",
+    "title": "Blank Notepad",
+    "image": "/images/blank-notepad.webp",
+    "imageAlt": "Blank Notepad",
+    "price": 300,
+    "tags": [
+      "live"
+    ],
+    "date": "2024-11-22",
+    "link": "https://paperdom.in/products/blank-notepad?variant=42293777236057",
+    "description": "",
+    "draft": false
+  },
+  {
+    "slug": "fabric-rollie-20",
+    "title": "Fabric Rollie 2.0",
+    "image": "/images/fabric-rollie-20.webp",
+    "imageAlt": "Fabric Rollie 2.0",
+    "price": 700,
+    "tags": [
+      "wear"
+    ],
+    "date": "2025-05-18",
+    "link": "https://www.juhubeachstudio.com/product/jbs-joint/",
+    "description": "",
+    "draft": false
+  },
+  {
+    "slug": "dots-to-ground-you",
+    "title": "Dots To Ground You",
+    "image": "/images/dots-to-ground-you.webp",
+    "imageAlt": "Dots To Ground You",
+    "price": 800,
+    "tags": [
+      "live",
+      "play",
+      "read"
+    ],
+    "date": "2023-08-24",
+    "link": "https://www.thethoughtco.in/products/dots-to-ground-you",
+    "description": "",
+    "draft": false
+  },
+  {
+    "slug": "emerald-green-coupe",
+    "title": "Emerald Green Coupe",
+    "image": "/images/emerald-green-coupe.webp",
+    "imageAlt": "Emerald Green Coupe",
+    "price": 3500,
+    "tags": [
+      "live",
+      "cook"
+    ],
+    "date": "2025-05-18",
+    "link": "https://www.rayt.in/products/emerald-green-champagne-coupe",
+    "description": "",
+    "draft": false
+  },
+  {
+    "slug": "clair-cup-saucer-set-of-2",
+    "title": "Clair Cup & Saucer (Set of 2)",
+    "image": "/images/clair-cup-saucer-set-of-2.webp",
+    "imageAlt": "Clair Cup & Saucer (Set of 2)",
+    "price": 2450,
+    "tags": [
+      "cook"
+    ],
+    "date": "2024-11-22",
+    "link": "https://cottonsandsatins.com/products/clair-cup-saucer-set-of-2",
+    "description": "",
+    "draft": false
+  },
+  {
+    "slug": "london-stripes",
+    "title": "London Stripes",
+    "image": "/images/london-stripes.webp",
+    "imageAlt": "London Stripes",
+    "price": 1850,
+    "tags": [
+      "live"
+    ],
+    "date": "2025-05-18",
+    "link": "https://lovehellodecember.com/products/london-stripes",
+    "description": "",
+    "draft": false
+  },
+  {
+    "slug": "aam-papad-strips",
+    "title": "Aam Papad Strips",
+    "image": "/images/aam-papad-strips.webp",
+    "imageAlt": "Aam Papad Strips",
+    "price": 249,
+    "tags": [
+      "cook"
+    ],
+    "date": "2023-10-09",
+    "link": "https://pistabarfi.com/products/puma-x-pistabarfi-aam-papad-strips",
+    "description": "",
+    "draft": false
+  },
+  {
+    "slug": "hand-embroidered-rainbow-diaper-bag",
+    "title": "Hand Embroidered Rainbow Diaper Bag",
+    "image": "/images/hand-embroidered-rainbow-diaper-bag.webp",
+    "imageAlt": "Hand Embroidered Rainbow Diaper Bag",
+    "price": 1750,
+    "tags": [
+      "live"
+    ],
+    "date": "2025-05-18",
+    "link": "https://zoey.in/products/hand-embroidered-rainbow-diaper-bag",
+    "description": "",
+    "draft": false
+  },
+  {
+    "slug": "kombucha-classic-original-500ml",
+    "title": "Kombucha-Classic Original 500ml",
+    "image": "/images/kombucha-classic-original-500ml.webp",
+    "imageAlt": "Kombucha-Classic Original 500ml",
+    "price": 260,
+    "tags": [
+      "cook"
+    ],
+    "date": "2025-04-05",
+    "link": "https://bombucha.in/products/kombucha-classic-original-500ml",
+    "description": "",
+    "draft": false
+  },
+  {
+    "slug": "clara-black",
+    "title": "Clara - Black",
+    "image": "/images/clara-black.webp",
+    "imageAlt": "Clara - Black",
+    "price": 299,
+    "tags": [
+      "wear"
+    ],
+    "date": "2023-08-30",
+    "link": "https://theater.xyz/products/clara-black",
+    "description": "",
+    "draft": false
+  },
+  {
+    "slug": "bento-ace-3-section-lunch-box-classic-black",
+    "title": "Bento Ace 3 Section Lunch Box - Classic Black",
+    "image": "/images/bento-ace-3-section-lunch-box-classic-black.webp",
+    "imageAlt": "Bento Ace 3 Section Lunch Box - Classic Black",
+    "price": 2099,
+    "tags": [
+      "live",
+      "cook"
+    ],
+    "date": "2024-11-22",
+    "link": "https://yourbasil.com/products/bent-ace-3c-classic-black",
+    "description": "",
+    "draft": false
+  },
+  {
+    "slug": "sunflower-craft-notebook-applique",
+    "title": "Sunflower Craft Notebook - Applique",
+    "image": "/images/sunflower-craft-notebook-applique.webp",
+    "imageAlt": "Sunflower Craft Notebook - Applique",
+    "price": 680,
+    "tags": [
+      "read"
+    ],
+    "date": "2023-09-25",
+    "link": "https://www.kissagoi.com/products/sunflower-patchwork-craft-notebook-applique",
+    "description": "",
+    "draft": false
+  },
+  {
+    "slug": "almond-dragees-jar",
+    "title": "Almond Dragees Jar",
+    "image": "/images/almond-dragees-jar.webp",
+    "imageAlt": "Almond Dragees Jar",
+    "price": 450,
+    "tags": [
+      "cook"
+    ],
+    "date": "2025-04-05",
+    "link": "https://entisi.com/products/almond-dragees-jar",
+    "description": "",
+    "draft": false
+  },
+  {
+    "slug": "olive-grove-enamel-candelabra",
+    "title": "Olive Grove Enamel Candelabra",
+    "image": "/images/olive-grove-enamel-candelabra.webp",
+    "imageAlt": "Olive Grove Enamel Candelabra",
+    "price": 2657,
+    "tags": [
+      "live"
+    ],
+    "date": "2025-05-18",
+    "link": "https://www.gulmoharlane.com/products/olive-grove-enamel-candelabra-1",
+    "description": "",
+    "draft": false
+  },
+  {
     "slug": "stendig-calendar-2027",
     "title": "Stendig Calendar 2027",
     "image": "/images/stendig-calendar-2027.webp",
@@ -53,7 +267,7 @@
     "date": "2026-11-13",
     "link": "https://www.thenamastore.com/#vanam-notebook",
     "description": "",
-    "draft": false
+    "draft": true
   },
   {
     "slug": "my-artsy-stash",
@@ -164,7 +378,7 @@
       "live"
     ],
     "date": "2026-10-15",
-    "link": "https://humanerror.in/products/001-book-stand",
+    "link": "https://humanerror.in/products/orbit-rack",
     "description": "",
     "draft": false
   },
@@ -1345,7 +1559,7 @@
     "date": "2025-02-16",
     "link": "https://factornotes.com/collections/card-games/products/memory-lane",
     "description": "",
-    "draft": false
+    "draft": true
   },
   {
     "slug": "linlin-kettle-solaris",
@@ -1357,7 +1571,7 @@
       "cook"
     ],
     "date": "2025-02-16",
-    "link": "https://www.chakolab.in/products/linlin-kettle-tumbler-bottle-yellow-blue",
+    "link": "https://www.chakolab.in/products/linlin-kettle-bottle-1150ml",
     "description": "",
     "draft": false
   },
@@ -1689,7 +1903,7 @@
     "date": "2023-08-24",
     "link": "https://www.tatacliq.com/westside-home-brown-wooden-ludo-set/p-mp000000008766242",
     "description": "material loving ludo adults",
-    "draft": false
+    "draft": true
   },
   {
     "slug": "scrunchies-original-shimma-multi",
@@ -2115,7 +2329,7 @@
     "date": "2023-08-28",
     "link": "https://www.amazon.in/Other-Opposites-Ellsworth-Concepts-Artists/dp/0714876291?&_encoding=UTF8&tag=aviaviaviii-21&linkCode=ur2&linkId=da8e2a278f6a1ae35c220440b7ce5e05&camp=3638&creative=24630",
     "description": "unexpected visual vocabulary",
-    "draft": true
+    "draft": false
   },
   {
     "slug": "hamiltons-alexander",
@@ -2370,7 +2584,7 @@
     "date": "2023-10-09",
     "link": "https://pistabarfi.com/products/pistabarfi?_pos=1&_sid=17ca89697&_ss=r",
     "description": "nostalgia branded",
-    "draft": false
+    "draft": true
   },
   {
     "slug": "multicolour-kumkum-bindis-spiral-notebook",
@@ -2483,7 +2697,7 @@
     "date": "2023-11-19",
     "link": "https://suibyastha.dm2buy.com/product/7H4Yj1hSj6oeQLV50HTvtr",
     "description": "",
-    "draft": false
+    "draft": true
   },
   {
     "slug": "the-therapy-toolkit-sixty-cards-for-self-exploration",
@@ -3042,7 +3256,7 @@
     "date": "2024-11-22",
     "link": "https://www.instagram.com/studiotosh/",
     "description": "",
-    "draft": true
+    "draft": false
   },
   {
     "slug": "ashtray",
@@ -3070,7 +3284,7 @@
     "date": "2024-11-22",
     "link": "https://www.paperdom.in/product-detail/1653381986/628c9b6248b06246347aae75",
     "description": "",
-    "draft": false
+    "draft": true
   },
   {
     "slug": "statement-tights-bite-me",
@@ -3196,7 +3410,7 @@
     "date": "2024-05-14",
     "link": "https://naughtydough.co.in/products/the-double-dark-chocolate-cookie?variant=42442282762446",
     "description": "",
-    "draft": false
+    "draft": true
   },
   {
     "slug": "spring-table",
@@ -3324,9 +3538,9 @@
       "live"
     ],
     "date": "2024-12-19",
-    "link": "https://www.onegoodobject.com/products/halo",
+    "link": "https://www.onegoodobject.com/products/halo-minimalist-wall-light?variant=52732634267931",
     "description": "",
-    "draft": true
+    "draft": false
   },
   {
     "slug": "barking-dog-yp-x-keith-haring",
@@ -3466,7 +3680,7 @@
     "date": "2024-12-20",
     "link": "https://janpathonline.com/products/bangle-hot-pink",
     "description": "",
-    "draft": false
+    "draft": true
   },
   {
     "slug": "tann-mann-dil",
@@ -3562,7 +3776,7 @@
       "live"
     ],
     "date": "2025-04-05",
-    "link": "https://boombird.shop/products/rechargeable-safety-alarm?variant=49414479413552",
+    "link": "https://boombird.shop/products/echo-safety-alarm",
     "description": "",
     "draft": false
   },
@@ -3704,7 +3918,7 @@
     "date": "2025-04-05",
     "link": "https://bombucha.in/products/mango-habanero-hot-sauce-230g-blr",
     "description": "",
-    "draft": false
+    "draft": true
   },
   {
     "slug": "chocolate-caramel-toffee",
@@ -3760,7 +3974,7 @@
     "date": "2025-02-16",
     "link": "https://thepikoshop.com/collections/2025/products/daily-planner-compounding-habits",
     "description": "",
-    "draft": false
+    "draft": true
   },
   {
     "slug": "pine-parachute-tote-bag",
@@ -4089,7 +4303,7 @@
       "live"
     ],
     "date": "2025-05-18",
-    "link": "https://olfaoriginals.com/products/oud-parfum-travel-capsules",
+    "link": "https://olfaoriginals.com/products/pure-oud-parfum-pods-pack-of-50",
     "description": "",
     "draft": false
   },
@@ -4306,7 +4520,7 @@
     "date": "2025-05-18",
     "link": "https://www.juhubeachstudio.com/product/aashiq-maroon-%E2%9D%A4%EF%B8%8F-%F0%9F%94%A5%F0%9F%90%8E/",
     "description": "",
-    "draft": false
+    "draft": true
   },
   {
     "slug": "jojo-rabbit-scarf",
@@ -4374,9 +4588,9 @@
       "live"
     ],
     "date": "2025-08-20",
-    "link": "https://amzn.to/404NuEu",
+    "link": "https://www.amazon.in/Lamy-Vista-Roller-Medium-refill/dp/B000UTIL2A",
     "description": "",
-    "draft": true
+    "draft": false
   },
   {
     "slug": "notebook",
@@ -4419,7 +4633,7 @@
     "date": "2025-08-20",
     "link": "https://www.amazon.in/CamelBak-Insulated-Stainless-Bottle-Seafoam/dp/B0FMLH82VT/ref=sr_1_7",
     "description": "",
-    "draft": false
+    "draft": true
   },
   {
     "slug": "fab-nice",
@@ -4617,7 +4831,7 @@
       "wear"
     ],
     "date": "2025-11-14",
-    "link": "https://in.ilemjapan.com/products/furoshiki?variant=47295912837272",
+    "link": "https://in.ilemjapan.com/products/furoshiki-gift-wrapping-cloth",
     "description": "",
     "draft": false
   },
@@ -4901,7 +5115,7 @@
     "date": "2025-11-14",
     "link": "https://sumaavi.in/products/rajasthani-kaavad-art-11-inches-ram-krishna-leela-green-colour",
     "description": "",
-    "draft": false
+    "draft": true
   },
   {
     "slug": "neel-rong-jamdani-cotton-handloom-curtain",
@@ -4955,7 +5169,7 @@
       "cook"
     ],
     "date": "2025-11-14",
-    "link": "https://rayt.in/products/coupe-all-colors-copy?utm_content=Advantage",
+    "link": "https://www.rayt.in/products/coupe-pastel-set-of-6",
     "description": "",
     "draft": false
   },
@@ -5011,7 +5225,7 @@
       "cook"
     ],
     "date": "2025-11-14",
-    "link": "https://ekaurr.com/products/ekaurr-grey-stone-tray-with-handles",
+    "link": "https://ekaurr.com/products/grey-stone-tray-with-handles",
     "description": "",
     "draft": false
   },
@@ -5171,15 +5385,15 @@
   },
   {
     "slug": "a-year-in-full-bloom-2026-calendar",
-    "title": "A Year In Full Bloom 2026 Calendar",
+    "title": "A Year In Full Bloom 2027 Calendar",
     "image": "/images/a-year-in-full-bloom-2026-calendar.webp",
-    "imageAlt": "A Year In Full Bloom 2026 Calendar",
-    "price": 399,
+    "imageAlt": "A Year In Full Bloom 2027 Calendar",
+    "price": 699,
     "tags": [
       "live"
     ],
     "date": "2026-02-02",
-    "link": "https://www.riyadesignshop.com/products/a-year-in-full-bloom-2025-calendar",
+    "link": "https://www.riyadesignshop.com/products/a-year-in-full-bloom-2027-calendar",
     "description": "",
     "draft": false
   },
@@ -5390,7 +5604,7 @@
       "read"
     ],
     "date": "2026-02-02",
-    "link": "https://lovepaati.com/products/love-paati-eu-copy",
+    "link": "https://lovepaati.com/products/love-paati",
     "description": "",
     "draft": false
   },
@@ -5592,7 +5806,7 @@
     "date": "2026-02-02",
     "link": "https://www.amazon.com/Steve-Framework-AI-Identity-Design/dp/908340417X",
     "description": "",
-    "draft": false
+    "draft": true
   },
   {
     "slug": "a-toolkit-for-gathering",
