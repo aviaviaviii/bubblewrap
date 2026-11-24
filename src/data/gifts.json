@@ -1,5 +1,19 @@
 [
   {
+    "slug": "almond-dragees-jar",
+    "title": "Almond Dragees Jar",
+    "image": "/images/almond-dragees-jar.webp",
+    "imageAlt": "Almond Dragees Jar",
+    "price": 450,
+    "tags": [
+      "cook"
+    ],
+    "date": "2026-11-24",
+    "link": "https://entisi.com/products/almond-dragees-jar",
+    "description": "",
+    "draft": false
+  },
+  {
     "slug": "olive-grove-enamel-candelabra",
     "title": "Olive Grove Enamel Candelabra",
     "image": "/images/olive-grove-enamel-candelabra.webp",
