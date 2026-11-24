@@ -1,5 +1,21 @@
 [
   {
+    "slug": "dots-to-ground-you",
+    "title": "Dots To Ground You",
+    "image": "/images/dots-to-ground-you.webp",
+    "imageAlt": "Dots To Ground You",
+    "price": 800,
+    "tags": [
+      "live",
+      "play",
+      "read"
+    ],
+    "date": "2023-08-24",
+    "link": "https://www.thethoughtco.in/products/dots-to-ground-you",
+    "description": "",
+    "draft": false
+  },
+  {
     "slug": "emerald-green-coupe",
     "title": "Emerald Green Coupe",
     "image": "/images/emerald-green-coupe.webp",
