@@ -1,5 +1,19 @@
 [
   {
+    "slug": "london-stripes",
+    "title": "London Stripes",
+    "image": "/images/london-stripes.webp",
+    "imageAlt": "London Stripes",
+    "price": 1850,
+    "tags": [
+      "live"
+    ],
+    "date": "2025-05-18",
+    "link": "https://lovehellodecember.com/products/london-stripes",
+    "description": "",
+    "draft": false
+  },
+  {
     "slug": "aam-papad-strips",
     "title": "Aam Papad Strips",
     "image": "/images/aam-papad-strips.webp",
