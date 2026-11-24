@@ -1,5 +1,19 @@
 [
   {
+    "slug": "fabric-rollie-20",
+    "title": "FABRIC ROLLIE 2.0🪴🌿💫",
+    "image": "/images/fabric-rollie-20.webp",
+    "imageAlt": "FABRIC ROLLIE 2.0🪴🌿💫",
+    "price": 700,
+    "tags": [
+      "wear"
+    ],
+    "date": "2025-05-18",
+    "link": "https://www.juhubeachstudio.com/product/jbs-joint/",
+    "description": "",
+    "draft": false
+  },
+  {
     "slug": "dots-to-ground-you",
     "title": "Dots To Ground You",
     "image": "/images/dots-to-ground-you.webp",
@@ -4478,7 +4492,7 @@
     "date": "2025-05-18",
     "link": "https://www.juhubeachstudio.com/product/aashiq-maroon-%E2%9D%A4%EF%B8%8F-%F0%9F%94%A5%F0%9F%90%8E/",
     "description": "",
-    "draft": false
+    "draft": true
   },
   {
     "slug": "jojo-rabbit-scarf",
