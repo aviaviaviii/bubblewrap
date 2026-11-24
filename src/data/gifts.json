@@ -1,5 +1,19 @@
 [
   {
+    "slug": "clara-black",
+    "title": "Clara - Black",
+    "image": "/images/clara-black.webp",
+    "imageAlt": "Clara - Black",
+    "price": 299,
+    "tags": [
+      "wear"
+    ],
+    "date": "2026-11-24",
+    "link": "https://theater.xyz/products/clara-black",
+    "description": "",
+    "draft": false
+  },
+  {
     "slug": "bento-ace-3-section-lunch-box-classic-black",
     "title": "Bento Ace 3 Section Lunch Box - Classic Black",
     "image": "/images/bento-ace-3-section-lunch-box-classic-black.webp",
