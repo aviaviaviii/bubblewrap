@@ -1,5 +1,19 @@
 [
   {
+    "slug": "olive-grove-enamel-candelabra",
+    "title": "Olive Grove Enamel Candelabra",
+    "image": "/images/olive-grove-enamel-candelabra.webp",
+    "imageAlt": "Olive Grove Enamel Candelabra",
+    "price": 2657,
+    "tags": [
+      "live"
+    ],
+    "date": "2026-11-24",
+    "link": "https://www.gulmoharlane.com/products/olive-grove-enamel-candelabra-1",
+    "description": "",
+    "draft": false
+  },
+  {
     "slug": "stendig-calendar-2027",
     "title": "Stendig Calendar 2027",
     "image": "/images/stendig-calendar-2027.webp",
