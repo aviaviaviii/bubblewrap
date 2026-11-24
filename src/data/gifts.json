@@ -1,5 +1,19 @@
 [
   {
+    "slug": "hand-embroidered-rainbow-diaper-bag",
+    "title": "Hand Embroidered Rainbow Diaper Bag",
+    "image": "/images/hand-embroidered-rainbow-diaper-bag.webp",
+    "imageAlt": "Hand Embroidered Rainbow Diaper Bag",
+    "price": 1750,
+    "tags": [
+      "live"
+    ],
+    "date": "2026-11-24",
+    "link": "https://zoey.in/products/hand-embroidered-rainbow-diaper-bag",
+    "description": "",
+    "draft": false
+  },
+  {
     "slug": "kombucha-classic-original-500ml",
     "title": "Kombucha-Classic Original 500ml",
     "image": "/images/kombucha-classic-original-500ml.webp",
