@@ -1,5 +1,20 @@
 [
   {
+    "slug": "bento-ace-3-section-lunch-box-classic-black",
+    "title": "Bento Ace 3 Section Lunch Box - Classic Black",
+    "image": "/images/bento-ace-3-section-lunch-box-classic-black.webp",
+    "imageAlt": "Bento Ace 3 Section Lunch Box - Classic Black",
+    "price": 2099,
+    "tags": [
+      "live",
+      "cook"
+    ],
+    "date": "2026-11-24",
+    "link": "https://yourbasil.com/products/bent-ace-3c-classic-black",
+    "description": "",
+    "draft": false
+  },
+  {
     "slug": "sunflower-craft-notebook-applique",
     "title": "Sunflower Craft Notebook - Applique",
     "image": "/images/sunflower-craft-notebook-applique.webp",
