@@ -1,5 +1,19 @@
 [
   {
+    "slug": "blank-notepad",
+    "title": "Blank Notepad",
+    "image": "/images/blank-notepad.webp",
+    "imageAlt": "Blank Notepad",
+    "price": 300,
+    "tags": [
+      "live"
+    ],
+    "date": "2024-11-22",
+    "link": "https://paperdom.in/products/blank-notepad?variant=42293777236057",
+    "description": "",
+    "draft": false
+  },
+  {
     "slug": "fabric-rollie-20",
     "title": "FABRIC ROLLIE 2.0🪴🌿💫",
     "image": "/images/fabric-rollie-20.webp",
@@ -3256,7 +3270,7 @@
     "date": "2024-11-22",
     "link": "https://www.paperdom.in/product-detail/1653381986/628c9b6248b06246347aae75",
     "description": "",
-    "draft": false
+    "draft": true
   },
   {
     "slug": "statement-tights-bite-me",
