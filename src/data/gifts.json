@@ -622,7 +622,7 @@
     "date": "2026-09-27",
     "link": "https://homero.in/products/homero-nordic-style-high-foot-push-lid-trash-can-16l",
     "description": "",
-    "draft": false
+    "draft": true
   },
   {
     "slug": "the-glassy-blown-candlesticks-(set-of-3)",
@@ -2606,6 +2606,7 @@
     "imageAlt": "Tall Iridescent Champagne Glass, Set of 2, 180ml",
     "price": 1550,
     "tags": [
+      "live",
       "cook"
     ],
     "date": "2023-10-09",
@@ -4548,7 +4549,7 @@
     "date": "2025-05-18",
     "link": "https://pricklybypb.com/products/cutie-memo-pads-bundle",
     "description": "",
-    "draft": true
+    "draft": false
   },
   {
     "slug": "ashtray-by-klaylist",
@@ -5278,7 +5279,7 @@
     "imageAlt": "Slate Stack Phone Wallet Stand",
     "price": 2999,
     "tags": [
-      "work"
+      "live"
     ],
     "date": "2025-12-19",
     "link": "https://www.dailyobjects.com/slate-stack-phone-wallet-stand/dp?f=pid~SLAT-STCK-PHN-WLET-STND&s=referer~lp",
@@ -5292,6 +5293,7 @@
     "imageAlt": "Green Avikar Cotton Mats, Set of 6",
     "price": 1199,
     "tags": [
+      "live",
       "cook"
     ],
     "date": "2025-12-19",
