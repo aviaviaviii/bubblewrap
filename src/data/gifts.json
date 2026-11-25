@@ -1337,7 +1337,7 @@
     "title": "Matchbook",
     "image": "/images/matchbook.webp",
     "imageAlt": "Matchbook",
-    "price": 360,
+    "price": 330,
     "tags": [
       "live"
     ],
@@ -2562,7 +2562,7 @@
     "title": "Manifest",
     "image": "/images/manifest.webp",
     "imageAlt": "Manifest",
-    "price": 393,
+    "price": 439,
     "tags": [
       "read"
     ],
@@ -2590,7 +2590,7 @@
     "title": "Multicolour Kumkum Bindis Spiral Notebook",
     "image": "/images/multicolour-kumkum-bindis-spiral-notebook.webp",
     "imageAlt": "Multicolour Kumkum Bindis Spiral Notebook",
-    "price": 258,
+    "price": 268,
     "tags": [
       "wear"
     ],
@@ -3882,7 +3882,7 @@
     "title": "Kaali Peeli",
     "image": "/images/kaali-peeli.webp",
     "imageAlt": "Kaali Peeli",
-    "price": 330,
+    "price": 350,
     "tags": [
       "play"
     ],
@@ -3952,7 +3952,7 @@
     "title": "Chhatai Yellow Socks",
     "image": "/images/chhatai-yellow-socks.webp",
     "imageAlt": "Chhatai Yellow Socks",
-    "price": 299,
+    "price": 500,
     "tags": [
       "wear"
     ],
@@ -4092,7 +4092,7 @@
     "title": "Stripe Cotton Pot Holder",
     "image": "/images/stripe-cotton-pot-holder.webp",
     "imageAlt": "Stripe Cotton Pot Holder",
-    "price": 280,
+    "price": 252,
     "tags": [
       "wear"
     ],
@@ -4246,7 +4246,7 @@
     "date": "2025-05-18",
     "link": "https://numic.in/collections/all/products/wsj-2-3-block-notepads",
     "description": "",
-    "draft": false
+    "draft": true
   },
   {
     "slug": "apocalypse-lyric-art-union",
@@ -4548,7 +4548,7 @@
     "date": "2025-05-18",
     "link": "https://pricklybypb.com/products/cutie-memo-pads-bundle",
     "description": "",
-    "draft": false
+    "draft": true
   },
   {
     "slug": "ashtray-by-klaylist",
@@ -4597,7 +4597,7 @@
     "title": "NOTEBOOK",
     "image": "/images/notebook.webp",
     "imageAlt": "NOTEBOOK",
-    "price": 107,
+    "price": 120,
     "tags": [
       "live"
     ],
